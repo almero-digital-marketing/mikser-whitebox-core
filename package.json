@@ -1,0 +1,42 @@
+{
+  "name": "mikser-whitebox-core",
+  "version": "1.0.0",
+  "description": "",
+  "files": [
+    "dist",
+    "lib",
+    "config.js"
+  ],
+  "scripts": {
+    "build": "node esbuild.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build"
+  },
+  "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almero-digital-marketing/mikser-whitebox-core.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/almero-digital-marketing/mikser-whitebox-core/issues"
+  },
+  "homepage": "https://github.com/almero-digital-marketing/mikser-whitebox-core#readme",
+  "dependencies": {
+    "node-machine-id": "^1.1.12",
+    "pinia": "^2.0.9",
+    "reconnect-net": "^1.1.1",
+    "vite-plugin-environment": "^1.1.0",
+    "vite-plugin-html": "^2.1.2"
+  },
+  "peerDependencies": {
+    "pinia": "^2.0.9"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {
+    "esbuild": "^0.13.15"
+  }
+}
