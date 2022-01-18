@@ -4,7 +4,7 @@
   "description": "",
   "files": [
     "dist",
-    "lib",
+    "src",
     "config.js"
   ],
   "scripts": {
@@ -34,7 +34,7 @@
     "pinia": "^2.0.9"
   },
   "directories": {
-    "lib": "lib"
+    "src": "src"
   },
   "devDependencies": {
     "esbuild": "^0.13.15"
