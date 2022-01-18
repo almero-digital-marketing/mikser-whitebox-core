@@ -3,7 +3,7 @@ const html = require('vite-plugin-html').default
 const environment = require('vite-plugin-environment').default
 const os = require('os')
 const { machineIdSync } = require('node-machine-id')
-const Gate = require('./lib/gate')
+const Gate = require('./src/gate')
 const path = require('path')
 
 module.exports = (options, domainConfig) => {
