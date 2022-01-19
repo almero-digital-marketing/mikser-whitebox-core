@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useWhiteboxConfig } from "./config"
+import { useWhiteboxRoutes } from "./routes"
 
 export const useWhiteboxDocuments = defineStore('whitebox-documents', {
     state: () => {
@@ -8,11 +8,11 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             currentRefId: ''
         }
     },
-    state: {
+    getters: {
         document() {
-            const configStore = useWhiteboxConfig()
+            const routesStore = useWhiteboxRoutes()
 
-            let route = configStore.documentRoutes[this.currentRefId]
+            let route = routesStore.documentRoutes[this.currentRefId]
             if (!route) return
             let document = this.href(route.href, route.document.meta.lang)
             document.route = route
@@ -27,7 +27,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             return documents
         },
         href: (state) => (href, lang, loaded) => {
-            const configStore = useWhiteboxConfig()
+            const routesStore = useWhiteboxRoutes()
 
             if (typeof lang == 'boolean') {
                 loaded = lang
@@ -35,7 +35,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
             lang =
                 lang ||
-                (configStore.documentRoutes[this.currentRefId] && configStore.documentRoutes[this.currentRefId].document.meta.lang) ||
+                (routesStore.documentRoutes[this.currentRefId] && routesStore.documentRoutes[this.currentRefId].document.meta.lang) ||
                 document.documentElement.lang ||
                 ''
 
@@ -50,7 +50,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         link: encodeURI(document.refId),
                     }
                 } else {
-                    let reverse = configStore.reverseRoutes[href]
+                    let reverse = routesStore.reverseRoutes[href]
                     if (reverse) {
                         let route = reverse.find((record) => record.document.meta.lang == lang)
                         if (route && !loaded) {
@@ -69,7 +69,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
         },
         hrefs: (state) => (regex, lang, loaded) => {
-            const configStore = useWhiteboxConfig()
+            const routesStore = useWhiteboxRoutes()
 
             if (typeof lang == 'boolean') {
                 loaded = lang
@@ -80,12 +80,12 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
             lang =
                 lang ||
-                (configStore.documentRoutes[state.currentRefId] && configStore.documentRoutes[state.currentRefId].document.meta.lang) ||
+                (routesStore.documentRoutes[state.currentRefId] && routesStore.documentRoutes[state.currentRefId].document.meta.lang) ||
                 document.documentElement.lang ||
                 ''
             let hreflang = state.sitemap[lang]
             if (hreflang) {
-                const documents = Object.keys(configStore.reverseRoutes)
+                const documents = Object.keys(routesStore.reverseRoutes)
                     .filter((href) => regex.test(href))
                     .map((href) => {
                         let document = hreflang[href]
@@ -96,7 +96,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                 link: encodeURI(document.refId),
                             }
                         } else {
-                            let reverse = configStore.reverseRoutes[href]
+                            let reverse = routesStore.reverseRoutes[href]
                             let route = reverse.find((record) => record.document.meta.lang == lang)
                             if (route) {
                                 return {
@@ -149,20 +149,21 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 this.sitemap[lang][href] = reactive(Object.freeze(document))
             }
         },
-        load(items) {
+        loadDocuments(items) {
             if (!items) items = []
             const result = []
              return new Promise(resolve => {
+                if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
                     let loading = []
-                    let route = configStore.documentRoutes[this.currentRefId]
+                    let route = routesStore.documentRoutes[this.currentRefId]
                     let refIds = []
 
                     for (let item of items) {
                         if (typeof item == 'string') {
                             if (route) {
-                                if (configStore.reverseRoutes[item]) {
-                                    let reverseRefIds = configStore.reverseRoutes[item]
+                                if (routesStore.reverseRoutes[item]) {
+                                    let reverseRefIds = routesStore.reverseRoutes[item]
                                     .filter((reverse) => reverse.document.meta.lang == route.document.meta.lang && (!this.sitemap[route.document.meta.lang] || !this.sitemap[route.document.meta.lang][item]))
                                     .map((reverse) => reverse.refId)
                                     .filter((refId) => feedPool[refId] == undefined)
@@ -175,7 +176,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                     let documentRefId = decodeURI(item)
                                     
                                     if (feedPool[documentRefId] == undefined ) {
-                                        let documentRoute = configStore.documentRoutes[documentRefId]
+                                        let documentRoute = routesStore.documentRoutes[documentRefId]
                                         if (documentRoute && !this.href(documentRoute.href, documentRoute.document.meta.lang, true)) {
                                             refIds.push(documentRefId)
                                             feedPool[documentRefId] = Date.now()
@@ -238,7 +239,8 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 })
             })
         },
-        live(initial) {
+        liveReload(initial) {
+            if (!window.whitebox) return
             window.whitebox.init('feed', (feed) => {
                 window.whitebox.emmiter.on('feed.change', (change) => {
                     if (change.type != 'ready') console.log('Feed change', change)

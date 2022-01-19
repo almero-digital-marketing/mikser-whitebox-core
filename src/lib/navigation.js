@@ -1,19 +1,19 @@
-import { useWhiteboxDocuments } from './stores/documents'
-import { useWhiteboxConfig } from "./stores/config"
+import { useWhiteboxDocuments } from '../stores/documents'
+import { useWhiteboxRoutes } from "../stores/routes"
 
 export default {
     install: (app) => {
         const router = app.config.globalProperties.$router
         
         router.beforeEach((to, from, next) => {
-            const configStore = useWhiteboxConfig()
+            const routesStore = useWhiteboxRoutes()
             const documentsStore = useWhiteboxDocuments()
 
             window.document.documentElement.lang = to.params.lang || window.document.documentElement.lang
             if(!documentsStore.currentRefId) documentsStore.currentRefId = router.currentRoute.refId || decodeURI(router.currentRoute.path)
 
             let documents = []
-            let documentRoute = configStore.documentRoutes[decodeURI(to.path)]
+            let documentRoute = routesStore.documentRoutes[decodeURI(to.path)]
             if (documentRoute) {
                 documents.push(to.path)
             }
@@ -30,11 +30,11 @@ export default {
                     data.push(matched.meta.data)
                 }
                 if (matched.meta.refId) {
-                    documentRoute = configStore.documentRoutes[matched.meta.refId]
+                    documentRoute = routesStore.documentRoutes[matched.meta.refId]
                     documents.unshift(matched.meta.refId)
                 }
             }
-            documentsStore.load(documents)
+            documentsStore.loadDocuments(documents)
             .then(() => {
                 if (data.length) {
                     documents = []
@@ -50,7 +50,7 @@ export default {
                             documents.push(dataDocuments)
                         }
                     }
-                    documentsStore.load(documents)
+                    documentsStore.loadDocuments(documents)
                     .then(() =>	next())
                 } else {
                     next()
@@ -60,8 +60,10 @@ export default {
         })
         
         router.afterEach((to) => {
+            const documentsStore = useWhiteboxDocuments()
             documentsStore.currentRefId = router.currentRoute.refId || decodeURI(router.currentRoute.path)
 
+            if (!window.whitebox) return
             window.whitebox.init('analytics', analytics => {
                 if (analytics) {
                     setTimeout(() => {
