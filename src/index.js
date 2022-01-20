@@ -1,11 +1,11 @@
 import { createMikser } from './lib/mikser'
 import { useWhiteboxFiles } from "./stores/files"
 import { useWhiteboxDocuments } from "./stores/documents"
-import { useWhiteboxConfig } from "./stores/routes"
+import { useWhiteboxRoutes } from "./stores/routes"
 
 export {
     createMikser,
     useWhiteboxFiles,
     useWhiteboxDocuments,
-    useWhiteboxConfig
+    useWhiteboxRoutes
 }

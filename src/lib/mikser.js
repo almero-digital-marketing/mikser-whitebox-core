@@ -1,39 +1,47 @@
-import navigation from './navigation'
 import { useWhiteboxFiles } from "../stores/files"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
+import navigation from './navigation'
 
-export function createMikser() {
-	let mikser = {}
-	const routesStore = useWhiteboxRoutes()
-	const filesStore = useWhiteboxFiles()
-	const documentsStore = useWhiteboxDocuments()
-
+export async function createMikser({ router, store, options }) {
+	const routesStore = useWhiteboxRoutes(store)
+	let routeDefinitions = {}
+	for (let route of router.options.routes) {
+		routeDefinitions[route.name] = route
+	}
+	let routes = await routesStore.loadRoutes({ ...options, routeDefinitions })
+	for (let route of routes.filter(route => route.component)) {
+		router.addRoute(route)
+	}
+	
 	return {
-		install(app, options) {
-			mikser = {
-				app,
-				options
-			}
+		install(app) {
+			app.use(navigation)
+			const documentsStore = useWhiteboxDocuments(store)
+			const filesStore = useWhiteboxFiles(store)
 			
-			app.config.globalProperties.$storage = filesStore.storage
-			app.config.globalProperties.$href = documentsStore.href
-			app.config.globalProperties.$document = documentsStore.document
-			app.config.globalProperties.$alternates = documentsStore.alternates
+			Object.defineProperty(app.config.globalProperties, '$href', {
+				get() {
+					return documentsStore.href
+				}
+			})
+			Object.defineProperty(app.config.globalProperties, '$document', {
+				get() {
+					return documentsStore.document
+				}
+			})
+			Object.defineProperty(app.config.globalProperties, '$alternates', {
+				get() {
+					return documentsStore.alternates
+				}
+			})
+			Object.defineProperty(app.config.globalProperties, '$storage', {
+				get() {
+					return filesStore.storage
+				}
+			})
 			
-			app.use(navigation, options)
-		},
-		async init() {
-			const router = mikser.app.config.globalProperties.$router
-			let routeDefinitions = {}
-			for (let route of router.options.routes) {
-				routeDefinitions[route.name] = route
-			}
-			let routes = await routesStore.loadRoutes({ ...mikser.options, routeDefinitions })
-			for (let route of routes) {
-				router.addRoute(route)
-			}
-			documentsStore.liveReload()
+			documentsStore.liveReload(!!options.preloadDocuments)
 		}
 	}
 }

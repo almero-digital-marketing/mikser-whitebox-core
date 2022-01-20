@@ -1,19 +1,21 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
 
+let feedPool = {} 
+
 export const useWhiteboxDocuments = defineStore('whitebox-documents', {
     state: () => {
         return {
 			sitemap: {},
-            currentRefId: ''
+            currentRefId: '/'
         }
     },
     getters: {
         document() {
             const routesStore = useWhiteboxRoutes()
-
             let route = routesStore.documentRoutes[this.currentRefId]
             if (!route) return
+
             let document = this.href(route.href, route.document.meta.lang)
             document.route = route
             return document	
@@ -35,7 +37,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
             lang =
                 lang ||
-                (routesStore.documentRoutes[this.currentRefId] && routesStore.documentRoutes[this.currentRefId].document.meta.lang) ||
+                (routesStore.documentRoutes[state.currentRefId] && routesStore.documentRoutes[state.currentRefId].document.meta.lang) ||
                 document.documentElement.lang ||
                 ''
 
@@ -121,10 +123,10 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             for (let document of documents) {
                 let href = document.data.meta.href || document.data.refId
                 let lang = document.data.meta.lang || ''
-                if (!this.sitemap[lang]) this.sitemap[lang] = reactive({})
+                if (!this.sitemap[lang]) this.sitemap[lang] = {}
                 const currentDocument = this.sitemap[lang][href]
                 if (!currentDocument || currentDocument.stamp != document.stamp) {
-                    this.sitemap[lang][href] = reactive(Object.freeze(document))
+                    this.sitemap[lang][href] = Object.freeze(document)
                 }
             }
             console.log('Load time:', Date.now() - window.startTime + 'ms')
@@ -140,25 +142,25 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 let lang = document.data.meta.lang || ''
                 
                 if (!this.sitemap[lang]) {
-                    this.sitemap[lang] = reactive({})
+                    this.sitemap[lang] = {}
                 } 
                 else {
                     let oldDocument = this.sitemap[lang][href]
                     if (oldDocument && oldDocument.stamp >= document.stamp) return
                 }
-                this.sitemap[lang][href] = reactive(Object.freeze(document))
+                this.sitemap[lang][href] = Object.freeze(document)
             }
         },
         loadDocuments(items) {
             if (!items) items = []
             const result = []
+            const routesStore = useWhiteboxRoutes()
              return new Promise(resolve => {
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
                     let loading = []
                     let route = routesStore.documentRoutes[this.currentRefId]
                     let refIds = []
-
                     for (let item of items) {
                         if (typeof item == 'string') {
                             if (route) {
@@ -193,7 +195,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                         context: 'mikser',
                                     }),
                                 }
-                                if (process.env.VUE_APP_WHITEBOX_CONTEXT) {
+                                if (typeof process != 'undefined' && process.env.VUE_APP_WHITEBOX_CONTEXT) {
                                     data.context = process.env.VUE_APP_WHITEBOX_CONTEXT
                                     data.query.context = data.query.context + '_' + data.context
                                 }
@@ -209,7 +211,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                             }
                         }
                     }
-                    
+
                     if (refIds.length) {
                         let data = {
                             vault: 'feed',
@@ -221,7 +223,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                 },
                             },
                         }
-                        if (process.env.VUE_APP_WHITEBOX_CONTEXT) {
+                        if (typeof process != 'undefined' && process.env.VUE_APP_WHITEBOX_CONTEXT) {
                             data.context = process.env.VUE_APP_WHITEBOX_CONTEXT
                             data.query.context = data.query.context + '_' + data.context
                         }
@@ -248,7 +250,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 })
                 let dataContext
                 let queryContext = 'mikser'
-                if (process.env.VUE_APP_WHITEBOX_CONTEXT) {
+                if (typeof process != 'undefined' && process.env.VUE_APP_WHITEBOX_CONTEXT) {
                     dataContext = process.env.VUE_APP_WHITEBOX_CONTEXT
                     queryContext = queryContext + '_' + dataContext
                 }

@@ -10,7 +10,9 @@ export default {
             const documentsStore = useWhiteboxDocuments()
 
             window.document.documentElement.lang = to.params.lang || window.document.documentElement.lang
-            if(!documentsStore.currentRefId) documentsStore.currentRefId = router.currentRoute.refId || decodeURI(router.currentRoute.path)
+            if(!documentsStore.currentRefId) {
+                documentsStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
+            }
 
             let documents = []
             let documentRoute = routesStore.documentRoutes[decodeURI(to.path)]
@@ -61,7 +63,7 @@ export default {
         
         router.afterEach((to) => {
             const documentsStore = useWhiteboxDocuments()
-            documentsStore.currentRefId = router.currentRoute.refId || decodeURI(router.currentRoute.path)
+            documentsStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
 
             if (!window.whitebox) return
             window.whitebox.init('analytics', analytics => {

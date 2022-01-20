@@ -1,8 +1,16 @@
 <template>
   <div>
-    TEST
+    <h1>WhiteBox Core</h1> 
+    {{ $document }}
     <router-view v-slot="{ Component }">
 			<component :is="Component" />
 		</router-view>
+    {{ $href('/web/translation') }}
   </div>
 </template>
+<script setup>
+import { useWhiteboxDocuments } from "./stores/documents"
+
+const documentsStore = useWhiteboxDocuments()
+documentsStore.loadDocuments(['/web/translation'])
+</script>
