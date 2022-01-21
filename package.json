@@ -1,11 +1,11 @@
 {
   "name": "mikser-whitebox-core",
-  "version": "1.1.0",
+  "version": "1.1.6",
   "description": "",
   "files": [
     "dist",
-    "src",
-    "config.js"
+    "config.js",
+    "src/typings/global.d.ts"
   ],
   "scripts": {
     "dev": "vite --host",
@@ -13,14 +13,15 @@
     "serve": "vite preview",
     "prepare": "npm run build"
   },
-  "main": "./dist/vue-whitebox-core.umd.js",
-  "module": "./dist/vue-whitebox-core.es.js",
+  "main": "dist/vue-whitebox-core.umd.js",
+  "module": "dist/vue-whitebox-core.es.js",
   "exports": {
     ".": {
       "import": "./dist/vue-whitebox-core.es.js",
       "require": "./dist/vue-whitebox-core.umd.js"
     }
   },
+  "types": "src/typings/global.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/almero-digital-marketing/mikser-whitebox-core.git"
@@ -33,11 +34,9 @@
   "homepage": "https://github.com/almero-digital-marketing/mikser-whitebox-core#readme",
   "dependencies": {
     "node-machine-id": "^1.1.12",
-    "pinia": "^2.0.9",
     "reconnect-net": "^1.1.1",
     "vite-plugin-environment": "^1.1.0",
-    "vite-plugin-html": "^2.1.2",
-    "vue-demi": "^0.12.1"
+    "vite-plugin-html": "^2.1.2"
   },
   "peerDependencies": {
     "pinia": "^2.0.9",
@@ -48,8 +47,10 @@
     "src": "src"
   },
   "devDependencies": {
+    "pinia": "^2.0.9",
     "@vitejs/plugin-vue": "^1.6.0",
     "@vue/compiler-sfc": "^3.0.5",
-    "vite": "^2.5.1"
+    "vite": "^2.5.1",
+    "vue-demi": "^0.12.1"
   }
 }

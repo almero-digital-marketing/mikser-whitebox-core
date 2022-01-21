@@ -13,34 +13,37 @@ export async function createMikser({ router, store, options }) {
 	for (let route of routes.filter(route => route.component)) {
 		router.addRoute(route)
 	}
-	
+
 	return {
 		install(app) {
 			app.use(navigation)
-			const documentsStore = useWhiteboxDocuments(store)
-			const filesStore = useWhiteboxFiles(store)
 			
 			Object.defineProperty(app.config.globalProperties, '$href', {
 				get() {
+					const documentsStore = useWhiteboxDocuments()
 					return documentsStore.href
 				}
 			})
 			Object.defineProperty(app.config.globalProperties, '$document', {
 				get() {
+					const documentsStore = useWhiteboxDocuments()
 					return documentsStore.document
 				}
 			})
 			Object.defineProperty(app.config.globalProperties, '$alternates', {
 				get() {
+					const documentsStore = useWhiteboxDocuments()
 					return documentsStore.alternates
 				}
 			})
 			Object.defineProperty(app.config.globalProperties, '$storage', {
 				get() {
+					const filesStore = useWhiteboxFiles()
 					return filesStore.storage
 				}
 			})
 			
+			const documentsStore = useWhiteboxDocuments()
 			documentsStore.liveReload(!!options.preloadDocuments)
 		}
 	}
