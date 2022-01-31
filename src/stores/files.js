@@ -24,10 +24,12 @@ export const useWhiteboxFiles = defineStore('wihtebox-files', {
                 if (storage) {
                     let data = {
                         file,
-                        cache: process.env.NODE_ENV == 'production'
                     }
-                    if (process.env.VUE_APP_WHITEBOX_CONTEXT) {
-                        data.context = process.env.VUE_APP_WHITEBOX_CONTEXT
+                    if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+                        data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
+                        data.cache = false
+                    } else {
+                        data.cache = true
                     }
                     let result = storage.service.link(data)
                     if (typeof result == 'string') {

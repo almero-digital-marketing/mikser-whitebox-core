@@ -32,8 +32,8 @@ export const useWhiteboxRoutes = defineStore('wihtebox-routes', {
 						projection: this.projection,
 						cache: '1h',
 					}
-					if (typeof process != 'undefined' && process.env.VUE_APP_WHITEBOX_CONTEXT) {
-						data.context = process.env.VUE_APP_WHITEBOX_CONTEXT
+					if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+						data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
 						data.query.context = data.query.context + '_' + data.context
 					}
 					if (feed.service.catalogs.mikser) {

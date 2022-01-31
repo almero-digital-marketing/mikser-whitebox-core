@@ -1,11 +1,11 @@
 {
   "name": "mikser-whitebox-core",
-  "version": "1.1.6",
+  "version": "1.1.17",
   "description": "",
   "files": [
     "dist",
     "config.js",
-    "src/typings/global.d.ts"
+    "src/types/global.d.ts"
   ],
   "scripts": {
     "dev": "vite --host",
@@ -21,7 +21,7 @@
       "require": "./dist/vue-whitebox-core.umd.js"
     }
   },
-  "types": "src/typings/global.d.ts",
+  "types": "src/types/global.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/almero-digital-marketing/mikser-whitebox-core.git"

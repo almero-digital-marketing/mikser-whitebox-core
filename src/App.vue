@@ -6,6 +6,7 @@
 			<component :is="Component" />
 		</router-view>
     {{ $href('/web/translation') }}
+    {{ $storage('/storage/animations/client-graphs.json') }}
   </div>
 </template>
 <script setup>
