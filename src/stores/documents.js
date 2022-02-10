@@ -120,15 +120,17 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
     },
     actions: {
         assignDocuments(documents) {
-            for (let document of documents) {
-                let href = document.data.meta.href || document.data.refId
-                let lang = document.data.meta.lang || ''
-                if (!this.sitemap[lang]) this.sitemap[lang] = {}
-                const currentDocument = this.sitemap[lang][href]
-                if (!currentDocument || currentDocument.stamp != document.stamp) {
-                    this.sitemap[lang][href] = Object.freeze(document)
+            this.$patch(state => {
+                for (let document of documents) {
+                    let href = document.data.meta.href || document.data.refId
+                    let lang = document.data.meta.lang || ''
+                    if (!state.sitemap[lang]) state.sitemap[lang] = {}
+                    const currentDocument = state.sitemap[lang][href]
+                    if (!currentDocument || currentDocument.stamp != document.stamp) {
+                        state.sitemap[lang][href] = Object.freeze(document)
+                    }
                 }
-            }
+            })
             console.log('Load time:', Date.now() - window.startTime + 'ms')
         },
         updateDocuments(change) {
@@ -195,7 +197,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                         context: 'mikser',
                                     }),
                                 }
-                                if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+                                if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
                                     data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
                                     data.query.context = data.query.context + '_' + data.context
                                 }
@@ -223,7 +225,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                 },
                             },
                         }
-                        if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+                        if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
                             data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
                             data.query.context = data.query.context + '_' + data.context
                         }
@@ -250,7 +252,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 })
                 let dataContext
                 let queryContext = 'mikser'
-                if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+                if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
                     dataContext = process.env['VUE_APP_WHITEBOX_CONTEXT']
                     queryContext = queryContext + '_' + dataContext
                 }

@@ -25,7 +25,7 @@ export const useWhiteboxFiles = defineStore('wihtebox-files', {
                     let data = {
                         file,
                     }
-                    if (process.env['VUE_APP_WHITEBOX_CONTEXT']) {
+                    if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
                         data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
                         data.cache = false
                     } else {
