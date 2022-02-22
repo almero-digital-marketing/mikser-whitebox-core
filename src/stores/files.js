@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-export const useWhiteboxFiles = defineStore('wihtebox-files', {
+export const useWhiteboxFiles = defineStore('whitebox-files', {
     state: () => {
         return {
 			filemap: {},
