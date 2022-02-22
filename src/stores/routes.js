@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-export const useWhiteboxRoutes = defineStore('wihtebox-routes', {
+export const useWhiteboxRoutes = defineStore('whitebox-routes', {
     state: () => {
         return {
             documentRoutes: {},
