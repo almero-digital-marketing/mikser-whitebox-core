@@ -3,7 +3,6 @@ const html = require('vite-plugin-html').default
 const environment = require('vite-plugin-environment').default
 const os = require('os')
 const { machineIdSync } = require('node-machine-id')
-const Gate = require('./src/gate')
 const path = require('path')
 
 module.exports = (options, domainConfig) => {
@@ -27,15 +26,6 @@ module.exports = (options, domainConfig) => {
             } : {
                 VUE_APP_WHITEBOX_DOMAIN: domainConfig.domain,
             }),
-            {
-                name: 'gate',
-                configureServer(server) {
-                    server.httpServer.on('listening', () => {
-                        gate = new Gate(server.httpServer.address().port)
-				        gate.open()
-                    })
-                }
-            }
         ],
         build: {
             outDir: 'out',

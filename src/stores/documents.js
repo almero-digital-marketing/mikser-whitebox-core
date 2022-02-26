@@ -7,17 +7,15 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
     state: () => {
         return {
 			sitemap: {},
-            currentRefId: '/'
         }
     },
     getters: {
         document() {
             const routesStore = useWhiteboxRoutes()
-            let route = routesStore.documentRoutes[this.currentRefId]
-            if (!route) return
+            if (!routesStore.documentRoute) return
 
-            let document = this.href(route.href, route.document.meta.lang)
-            document.route = route
+            let document = this.href(routesStore.documentRoute.href, routesStore.documentRoute.document.meta.lang)
+            document.documentRoute = routesStore.documentRoute
             return document	
         },
         alternates: (state) => (href) => {
@@ -37,7 +35,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
             lang =
                 lang ||
-                (routesStore.documentRoutes[state.currentRefId] && routesStore.documentRoutes[state.currentRefId].document.meta.lang) ||
+                (routesStore.documentRoute && routesStore.documentRoute.document.meta.lang) ||
                 document.documentElement.lang ||
                 ''
 
@@ -82,7 +80,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             }
             lang =
                 lang ||
-                (routesStore.documentRoutes[state.currentRefId] && routesStore.documentRoutes[state.currentRefId].document.meta.lang) ||
+                (routesStore.documentRoute && routesStore.documentRoute.document.meta.lang) ||
                 document.documentElement.lang ||
                 ''
             let hreflang = state.sitemap[lang]
@@ -157,18 +155,23 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             if (!items) items = []
             const result = []
             const routesStore = useWhiteboxRoutes()
-             return new Promise(resolve => {
+            return new Promise(resolve => {
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
                     let loading = []
-                    let route = routesStore.documentRoutes[this.currentRefId]
                     let refIds = []
                     for (let item of items) {
                         if (typeof item == 'string') {
-                            if (route) {
+                            if (routesStore.documentRoute) {
                                 if (routesStore.reverseRoutes[item]) {
                                     let reverseRefIds = routesStore.reverseRoutes[item]
-                                    .filter((reverse) => reverse.document.meta.lang == route.document.meta.lang && (!this.sitemap[route.document.meta.lang] || !this.sitemap[route.document.meta.lang][item]))
+                                    .filter((reverse) => 
+                                        reverse.document.meta.lang == routesStore.documentRoute.document.meta.lang && 
+                                        (
+                                            !this.sitemap[routesStore.documentRoute.document.meta.lang] || 
+                                            !this.sitemap[routesStore.documentRoute.document.meta.lang][item]
+                                        )
+                                    )
                                     .map((reverse) => reverse.refId)
                                     .filter((refId) => feedPool[refId] == undefined)
                                     
@@ -191,25 +194,32 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         } else {
                             const itemId = JSON.stringify(item)
                             if (feedPool[itemId] == undefined ) {
-                                let data = {
-                                    vault: 'feed',
-                                    query: Object.assign(item, {
-                                        context: 'mikser',
-                                    }),
+                                feedPool[itemId] = []
+
+                                let data = {}
+                                if (item.query) {
+                                    data = item
+                                } else {
+                                    data.query = item
                                 }
+                                data.query.context = 'mikser'
+                                data.vault = 'feed'
                                 if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
                                     data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
                                     data.query.context = data.query.context + '_' + data.context
                                 }
+                                
                                 loading.push(
                                     feed.service.catalogs.mikser
                                     .find(data)
                                     .then((documents) => {
-                                        result.push(...documents)
+                                        feedPool[itemId].push(...documents)
+                                        result.push(...feedPool[itemId])
                                         this.assignDocuments(documents)
                                     })
                                 )
-                                feedPool[itemId] = Date.now()
+                            } else {
+                                result.push(...feedPool[itemId])
                             }
                         }
                     }

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useWhiteboxDocuments } from '../stores/documents'
 
 export const useWhiteboxRoutes = defineStore('whitebox-routes', {
     state: () => {
@@ -6,10 +7,59 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
             documentRoutes: {},
             reverseRoutes: {},
             projection: {},
-            routes: []
+            routes: [],
+			currentRefId: '/'
         }
     },
+	getters: {
+		collections() {
+			const collections = {}
+			for (let name in this.documentRoutes[this.currentRefId].collections) {
+				collections[name] = this.documentRoutes[this.currentRefId].collections[name].map(document => {
+					return {
+                        loaded: true,
+                        meta: document.data.meta,
+                        link: encodeURI(document.refId),
+                    }
+				})
+			}
+			return collections
+		},
+		documentRoute() {
+			return this.documentRoutes[this.currentRefId]
+		}
+	},
     actions: {
+		async loadCollections(collections, refId) {
+			refId = refId || this.currentRefId
+			const documentsStore = useWhiteboxDocuments()
+			const loadDocuments = []
+			const documentRoute = this.documentRoutes[refId]
+			const document = documentsStore.sitemap[documentRoute.document.meta.lang][documentRoute.href]
+			for(let name in collections) {
+				const dataCallback = collections[name]
+				let collection = await dataCallback({
+					meta: document.data.meta,
+					link: encodeURI(document.refId),
+				})
+				if (collection) {
+					if (!Array.isArray(collection)) {
+						collection = [collection]
+					}
+					loadDocuments.push(
+						documentsStore.loadDocuments(collection)
+						.then(documents => {
+							documentRoute.collections[name] = documents
+						})
+						.catch(error => {
+							documentRoute.collections[name] = { error }
+							throw error
+						})
+					)
+				}
+			}
+			return Promise.all(loadDocuments)
+		},
         loadRoutes({ documentRoutes, reverseRoutes, projection, routeDefinitions }) {
 			Object.assign(this.documentRoutes, documentRoutes)
             Object.assign(this.reverseRoutes, reverseRoutes)
@@ -23,7 +73,6 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			})
 			
             return new Promise((resolve, reject) => {
-				
 				if (!window.whitebox) return resolve([])
 				window.whitebox.init('feed', (feed) => {
 					let data = {
@@ -51,7 +100,8 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 								this.documentRoutes[document.refId] = {
 									href: document.data.meta.href,
 									document: document.data,
-									endpoint: 'mikser'
+									endpoint: 'mikser',
+									collections: {},
 								}
 								const routeDefinition = routeDefinitions[document.data.meta.layout] || {}
 								routes.push({

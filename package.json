@@ -1,6 +1,6 @@
 {
   "name": "mikser-whitebox-core",
-  "version": "1.1.20",
+  "version": "1.2.21",
   "description": "",
   "files": [
     "dist",
@@ -19,7 +19,8 @@
     ".": {
       "import": "./dist/vue-whitebox-core.es.js",
       "require": "./dist/vue-whitebox-core.umd.js"
-    }
+    },
+    "./config": "./config.js"
   },
   "types": "src/types/global.d.ts",
   "repository": {

@@ -3,6 +3,7 @@ declare module 'mikser-whitebox-core' {
         $href: (href: string, lang?: string, loaded?: boolean) => object,
         $document: object,
         $alternates: (href: string) => object[],
-        $storage: (file: string) => string
+        $storage: (file: string) => string,
+        $data: object,
     }
 }

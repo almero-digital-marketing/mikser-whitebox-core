@@ -42,6 +42,13 @@ export async function createMikser({ router, store, options }) {
 					return filesStore.storage
 				}
 			})
+			Object.defineProperty(app.config.globalProperties, '$collections', {
+				get() {
+					const routesStore = useWhiteboxRoutes()
+					return routesStore.collections
+				}
+			})
+
 			
 			const documentsStore = useWhiteboxDocuments()
 			documentsStore.liveReload(!!options.preloadDocuments)
