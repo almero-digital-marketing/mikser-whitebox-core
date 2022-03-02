@@ -16,15 +16,22 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			const collections = {}
 			for (let name in this.documentRoutes[this.currentRefId].collections) {
 				let collection = this.documentRoutes[this.currentRefId].collections[name]
-				collections[name] = collection.documents.map(document => {
-					return {
-                        loaded: true,
-                        meta: document.data.meta,
-                        link: encodeURI(document.refId),
-                    }
-				})
-				collections[name].loaded = collection.loaded
-				collections[name].error = collection.error
+				if (collection.documents) {
+					collections[name] = collection.documents.map(document => {
+						return {
+							loaded: true,
+							meta: document.data.meta,
+							link: encodeURI(document.refId),
+						}
+					})
+					collections[name].loaded = true
+				} else {
+					collections[name] = []
+					collections[name].loaded = false
+				}
+				if (collection.error) {
+					collections[name].error = collection.error
+				}
 			}
 			return collections
 		},
@@ -51,7 +58,6 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 					loadDocuments.push(
 						documentsStore.loadDocuments(collection)
 						.then(documents => {
-							documentRoute.collections[name].loaded = true
 							documentRoute.collections[name].documents = documents
 						})
 						.catch(error => {
@@ -106,8 +112,6 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 								if (routeDefinition.meta?.collections) {
 									for(let collectionName in routeDefinition.meta.collections) {
 										collections[collectionName] = {
-											documents: [],
-											loaded: false,
 											query: routeDefinition.meta.collections[collectionName]
 										}
 									}
