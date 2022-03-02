@@ -14,7 +14,7 @@ const router = createRouter({
         component: () => import('./views/Home.vue'),
         meta: {
 			collections: {
-				projects: document => ({
+				items: document => ({
                     query: {
                         'data.meta.layout': 'Home',
                         'data.meta.lang': document.meta.lang
@@ -28,7 +28,7 @@ const router = createRouter({
         component: () => import('./views/Projects.vue'),
 		meta: {
 			collections: {
-				projects: document => ({
+				items: document => ({
                     'data.meta.layout': 'Project',
                     'data.meta.lang': document.meta.lang
 				}),
