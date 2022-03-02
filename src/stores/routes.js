@@ -15,13 +15,16 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 		collections() {
 			const collections = {}
 			for (let name in this.documentRoutes[this.currentRefId].collections) {
-				collections[name] = this.documentRoutes[this.currentRefId].collections[name].map(document => {
+				let collection = this.documentRoutes[this.currentRefId].collections[name]
+				collections[name] = collection.documents.map(document => {
 					return {
                         loaded: true,
                         meta: document.data.meta,
                         link: encodeURI(document.refId),
                     }
 				})
+				collections[name].loaded = collection.loaded
+				collections[name].error = collection.error
 			}
 			return collections
 		},
@@ -49,10 +52,11 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 					loadDocuments.push(
 						documentsStore.loadDocuments(collection)
 						.then(documents => {
-							documentRoute.collections[name] = documents
+							documentRoute.collections[name].loaded = true
+							documentRoute.collections[name].documents = documents
 						})
 						.catch(error => {
-							documentRoute.collections[name] = { error }
+							documentRoute.collections[name].error = error
 							throw error
 						})
 					)
@@ -91,19 +95,30 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 						.then((documents) => {
 							let routes = []
 							for (let document of documents) {
+								const routeDefinition = routeDefinitions[document.data.meta.layout] || {}
+								
 								this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
 								this.reverseRoutes[document.data.meta.href].push({ 
 									refId: document.refId,
 									document: document.data,
 									endpoint: 'mikser'
 								})
+								let collections = {}
+								if (routeDefinition.meta?.collections) {
+									for(let collectionName in routeDefinition.meta.collections) {
+										collections[collectionName] = {
+											documents: [],
+											loaded: false
+										}
+									}
+								}
 								this.documentRoutes[document.refId] = {
 									href: document.data.meta.href,
 									document: document.data,
 									endpoint: 'mikser',
-									collections: {},
+									collections
 								}
-								const routeDefinition = routeDefinitions[document.data.meta.layout] || {}
+								
 								routes.push({
 									path: encodeURI(document.refId),
 									component: routeDefinition.component,
