@@ -33,15 +33,14 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 		}
 	},
     actions: {
-		async loadCollections(collections, refId) {
+		async loadCollections(refId) {
 			refId = refId || this.currentRefId
 			const documentsStore = useWhiteboxDocuments()
 			const loadDocuments = []
 			const documentRoute = this.documentRoutes[refId]
 			const document = documentsStore.sitemap[documentRoute.document.meta.lang][documentRoute.href]
-			for(let name in collections) {
-				const dataCallback = collections[name]
-				let collection = await dataCallback({
+			for(let name in documentRoute.collections) {
+				let collection = await documentRoute.collections[name].query({
 					meta: document.data.meta,
 					link: encodeURI(document.refId),
 				})
@@ -108,7 +107,8 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 									for(let collectionName in routeDefinition.meta.collections) {
 										collections[collectionName] = {
 											documents: [],
-											loaded: false
+											loaded: false,
+											query: routeDefinition.meta.collections[collectionName]
 										}
 									}
 								}

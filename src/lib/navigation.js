@@ -17,7 +17,6 @@ export default {
             if (documentRoute) {
                 documents.push(to.path)
             }
-            const collections = {}
             for(let matched of to.matched) {
                 if (matched.meta.documents) {
                     if (Array.isArray(matched.meta.documents)) {
@@ -31,7 +30,6 @@ export default {
                     documentRoute = routesStore.documentRoutes[matched.meta.refId]
                     documents.unshift(matched.meta.refId)
                 }
-                Object.assign(collections, matched.meta.collections)
             }
             
             documentsStore.loadDocuments(documents)
@@ -43,11 +41,7 @@ export default {
             const routesStore = useWhiteboxRoutes()
             routesStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
 
-            const collections = {}
-            for(let matched of to.matched) {
-                Object.assign(collections, matched.meta.collections)
-            }
-            routesStore.loadCollections(collections).catch(console.error)
+            routesStore.loadCollections().catch(console.error)
 
             if (!window.whitebox) return
             window.whitebox.init('analytics', analytics => {
