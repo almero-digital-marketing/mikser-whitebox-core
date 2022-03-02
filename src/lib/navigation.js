@@ -39,9 +39,7 @@ export default {
         
         router.afterEach((to) => {
             const routesStore = useWhiteboxRoutes()
-            routesStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
-
-            routesStore.loadCollections().catch(console.error)
+            routesStore.loadRoute(router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)).catch(console.error)
 
             if (!window.whitebox) return
             window.whitebox.init('analytics', analytics => {

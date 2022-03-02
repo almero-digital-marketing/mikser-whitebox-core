@@ -40,8 +40,9 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 		}
 	},
     actions: {
-		async loadCollections(refId) {
-			refId = refId || this.currentRefId
+		async loadRoute(refId) {
+			this.currentRefId = refId
+
 			const documentsStore = useWhiteboxDocuments()
 			const loadDocuments = []
 			const documentRoute = this.documentRoutes[refId]
@@ -128,40 +129,40 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 									component: routeDefinition.component,
 									meta: routeDefinition.meta,
 									alias: ['/' + document.data.meta.lang + document.data.meta.href],
+									props: this.documentRoutes[document.refId],
+								})
+								if (document.data.meta.route) {
+									let documentMeta = { ...routeDefinition.meta }
+									documentMeta.refId = document.refId
+									if (documentMeta.documents) {
+										if (Array.isArray(documentMeta.documents)) {
+											documentMeta.documents = [document.refId, ...documentMeta.documents]
+										} else {
+											documentMeta.documents = [document.refId, documentMeta.documents]
+										}
+									} else {
+										documentMeta.documents = document.refId
+									}
+									routes.push({
+										path: encodeURI(document.refId) + document.data.meta.route,
+										component: routeDefinition.component,
+										meta: documentMeta,
 										props: this.documentRoutes[document.refId],
 									})
-									if (document.data.meta.route) {
-										let documentMeta = { ...routeDefinition.meta }
-										documentMeta.refId = document.refId
-										if (documentMeta.documents) {
-											if (Array.isArray(documentMeta.documents)) {
-												documentMeta.documents = [document.refId, ...documentMeta.documents]
-											} else {
-												documentMeta.documents = [document.refId, documentMeta.documents]
-											}
-										} else {
-											documentMeta.documents = document.refId
-										}
-										routes.push({
-											path: encodeURI(document.refId) + document.data.meta.route,
-											component: routeDefinition.component,
-											meta: documentMeta,
-											props: this.documentRoutes[document.refId],
-										})
-									}
 								}
-								console.log('Routes:', routes.length, Date.now() - window.startTime + 'ms')
-                                this.routes = routes
-							
-								resolve(routes)
-							})
-							.catch(reject)
-						} else {
-							console.warn('Mikser catalog is missing')
-							resolve([])
-						}
-					})
+							}
+							console.log('Routes:', routes.length, Date.now() - window.startTime + 'ms')
+							this.routes = routes
+						
+							resolve(routes)
+						})
+						.catch(reject)
+					} else {
+						console.warn('Mikser catalog is missing')
+						resolve([])
+					}
 				})
-			}
+			})
 		}
-	})
+	}
+})
