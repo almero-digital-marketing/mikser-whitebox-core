@@ -48,6 +48,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         loaded: true,
                         meta: document.data.meta,
                         link: encodeURI(document.refId),
+                        content: document.data.content
                     }
                 } else {
                     let reverse = routesStore.reverseRoutes[href]

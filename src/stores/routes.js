@@ -22,6 +22,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 							loaded: true,
 							meta: document.data.meta,
 							link: encodeURI(document.refId),
+							content: document.data.content
 						}
 					})
 					collections[name].loaded = true
