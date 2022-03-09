@@ -29,7 +29,7 @@ module.exports = (options, domainConfig) => {
         ],
         build: {
             outDir: 'out',
-            sourcemap: false,
+            sourcemap: options.mode == 'development',
             rollupOptions: {
                 output: {
                     manualChunks: id => {

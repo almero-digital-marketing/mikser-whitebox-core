@@ -1,6 +1,6 @@
 {
   "name": "mikser-whitebox-core",
-  "version": "1.2.27",
+  "version": "1.2.31",
   "description": "",
   "files": [
     "dist",
@@ -37,21 +37,21 @@
     "node-machine-id": "^1.1.12",
     "reconnect-net": "^1.1.1",
     "vite-plugin-environment": "^1.1.0",
-    "vite-plugin-html": "^2.1.2"
+    "vite-plugin-html": "^3.1.0"
   },
   "peerDependencies": {
-    "pinia": "^2.0.9",
-    "vue": "^3.2.1",
-    "vue-router": "^4.0.10"
+    "pinia": "^2.0.11",
+    "vue": "^3.2.31",
+    "vue-router": "^4.0.13"
   },
   "directories": {
     "src": "src"
   },
   "devDependencies": {
-    "pinia": "^2.0.9",
-    "@vitejs/plugin-vue": "^1.6.0",
-    "@vue/compiler-sfc": "^3.0.5",
-    "vite": "^2.5.1",
+    "pinia": "^2.0.11",
+    "@vitejs/plugin-vue": "^2.2.4",
+    "@vue/compiler-sfc": "^3.2.31",
+    "vite": "^2.8.6",
     "vue-demi": "^0.12.1"
   }
 }
