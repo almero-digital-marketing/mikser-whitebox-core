@@ -8,7 +8,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
             reverseRoutes: {},
             projection: {},
             routes: [],
-			currentRefId: '/'
+			currentRefId: decodeURI(window.location.pathname)
         }
     },
 	getters: {
@@ -42,8 +42,6 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 	},
     actions: {
 		async loadRoute(refId) {
-			this.currentRefId = refId
-
 			const documentsStore = useWhiteboxDocuments()
 			const loadDocuments = []
 			const documentRoute = this.documentRoutes[refId]

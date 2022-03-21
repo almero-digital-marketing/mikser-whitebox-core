@@ -8,11 +8,10 @@ export default {
         router.beforeEach((to, from, next) => {
             const routesStore = useWhiteboxRoutes()
             const documentsStore = useWhiteboxDocuments()
-
-            window.document.documentElement.lang = to.params.lang || window.document.documentElement.lang
-
+           
+            
             let documents = []
-            let toRefId = decodeURI(to.path)
+            const toRefId = decodeURI(to.path)
             let documentRoute = routesStore.documentRoutes[toRefId]
             if (documentRoute) {
                 documents.push(to.path)
@@ -33,7 +32,10 @@ export default {
             }
             
             documentsStore.loadDocuments(documents)
-            .then(() => next())
+            .then(() => {
+                routesStore.currentRefId = toRefId
+                next()
+            })
             .catch(err => next(err))
         })
         

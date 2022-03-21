@@ -24,6 +24,10 @@ function increment() {
 
 const documentsStore = useWhiteboxDocuments()
 documentsStore.loadDocuments(['/web/translation'])
+
+import { onDocumentChanged } from './lib/hooks'
+onDocumentChanged((newValue, oldValue) => console.log('Document changed:', oldValue, '→', newValue))
+
 </script>
 <style>
 .debug {
