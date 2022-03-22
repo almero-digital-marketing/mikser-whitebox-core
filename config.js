@@ -1,5 +1,5 @@
 const vue = require('@vitejs/plugin-vue')
-const html = require('vite-plugin-html').default
+const html = require('vite-plugin-html').createHtmlPlugin
 const environment = require('vite-plugin-environment').default
 const os = require('os')
 const { machineIdSync } = require('node-machine-id')
