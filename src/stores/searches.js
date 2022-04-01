@@ -41,6 +41,8 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
         },
         search(name, queries, options = {}) {
             return new Promise(resolve => {
+                this.searchMap[name] = []
+                this.searchMap[name].loaded = false
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
                     let data = {
@@ -64,7 +66,11 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
                     .search(data)
                     .then((documents) => {
                         this.searchMap[name] = documents.map(normalizeDocument)
+                        this.searchMap[name].loaded = true
                         resolve(documents)
+                    })
+                    .catch(error => {
+                        this.searchMap[name].error = error
                     })
                 })
             })

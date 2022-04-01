@@ -12,7 +12,7 @@
       {{ $storage('/storage/animations/client-graphs.json') }}
     </div>
     <h2>Search</h2>
-    <input type="text" v-model="query"> <button @click="search">Search</button><br><br>
+    <input type="text" v-model="query" @keyup.enter="search"> <button @click="search">Search</button><br><br>
     <div class="debug">
       {{ $hits('projects') }}
     </div>
