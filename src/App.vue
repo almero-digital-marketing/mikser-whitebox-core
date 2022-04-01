@@ -11,22 +11,47 @@
       {{ $href('/web/translation') }}
       {{ $storage('/storage/animations/client-graphs.json') }}
     </div>
+    <h2>Search</h2>
+    <input type="text" v-model="query"> <button @click="search">Search</button><br><br>
+    <div class="debug">
+      {{ $hits('projects') }}
+    </div>
   </div>
 </template>
 <script setup>
 import { useWhiteboxDocuments } from "./stores/documents"
+import { useWhiteboxSearches } from "./stores/searches"
+import { metaField } from './lib/utils'
 
 let count = $ref(0)
-
+let query = $ref('') 
 function increment() {
   count++
 }
 
-const documentsStore = useWhiteboxDocuments()
-documentsStore.loadDocuments(['/web/translation'])
+const documents = useWhiteboxDocuments()
+documents.loadDocuments(['/web/translation'])
 
 import { onDocumentChanged } from './lib/hooks'
 onDocumentChanged((newValue, oldValue) => console.log('Document changed:', oldValue, '→', newValue))
+
+function search() {
+  const searches = useWhiteboxSearches()
+  searches.multiMatch('projects', {
+    query,
+    fields: [
+      metaField('Project', 'title'), 
+      metaField('Project', 'overview')
+    ],
+    type: 'phrase_prefix'
+  })
+}
+
+// searches.match('projects', {
+//   [metaField('Project', 'company')]: {
+//     query: 'Med Pro'
+//   }
+// })
 
 </script>
 <style>

@@ -100,7 +100,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 						.then((documents) => {
 							let routes = []
 							for (let document of documents) {
-								const routeDefinition = routeDefinitions[document.data.meta.layout] || {}
+								const routeDefinition = routeDefinitions[document.data.meta.layout]
 								
 								this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
 								this.reverseRoutes[document.data.meta.href].push({ 
@@ -109,7 +109,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 									endpoint: 'mikser'
 								})
 								let collections = {}
-								if (routeDefinition.meta?.collections) {
+								if (routeDefinition?.meta?.collections) {
 									for(let collectionName in routeDefinition.meta.collections) {
 										collections[collectionName] = {
 											query: routeDefinition.meta.collections[collectionName]
@@ -123,31 +123,33 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 									collections
 								}
 								
-								routes.push({
-									path: encodeURI(document.refId),
-									component: routeDefinition.component,
-									meta: routeDefinition.meta,
-									alias: ['/' + document.data.meta.lang + document.data.meta.href],
-									props: this.documentRoutes[document.refId],
-								})
-								if (document.data.meta.route) {
-									let documentMeta = { ...routeDefinition.meta }
-									documentMeta.refId = document.refId
-									if (documentMeta.documents) {
-										if (Array.isArray(documentMeta.documents)) {
-											documentMeta.documents = [document.refId, ...documentMeta.documents]
-										} else {
-											documentMeta.documents = [document.refId, documentMeta.documents]
-										}
-									} else {
-										documentMeta.documents = document.refId
-									}
+								if (routeDefinition) {
 									routes.push({
-										path: encodeURI(document.refId) + document.data.meta.route,
+										path: encodeURI(document.refId),
 										component: routeDefinition.component,
-										meta: documentMeta,
+										meta: routeDefinition.meta,
+										alias: ['/' + document.data.meta.lang + document.data.meta.href],
 										props: this.documentRoutes[document.refId],
 									})
+									if (document.data.meta.route) {
+										let documentMeta = { ...routeDefinition.meta }
+										documentMeta.refId = document.refId
+										if (documentMeta.documents) {
+											if (Array.isArray(documentMeta.documents)) {
+												documentMeta.documents = [document.refId, ...documentMeta.documents]
+											} else {
+												documentMeta.documents = [document.refId, documentMeta.documents]
+											}
+										} else {
+											documentMeta.documents = document.refId
+										}
+										routes.push({
+											path: encodeURI(document.refId) + document.data.meta.route,
+											component: routeDefinition.component,
+											meta: documentMeta,
+											props: this.documentRoutes[document.refId],
+										})
+									}
 								}
 							}
 							console.log('Routes:', routes.length, Date.now() - window.startTime + 'ms')

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
+import { queryContext, dataContext } from '../lib/context'
 
 let feedPool = {} 
 
@@ -203,12 +204,9 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                 } else {
                                     data.query = item
                                 }
-                                data.query.context = 'mikser'
+                                data.context = dataContext
+                                data.query.context = queryContext
                                 data.vault = 'feed'
-                                if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
-                                    data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
-                                    data.query.context = data.query.context + '_' + data.context
-                                }
                                 
                                 loading.push(
                                     feed.service.catalogs.mikser
@@ -229,16 +227,13 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         let data = {
                             vault: 'feed',
                             cache: '1h',
+                            context: dataContext,
                             query: {
-                                context: 'mikser',
+                                context: queryContext,
                                 refId: {
                                     $in: refIds,
                                 },
                             },
-                        }
-                        if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
-                            data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
-                            data.query.context = data.query.context + '_' + data.context
                         }
                         
                         loading.push(

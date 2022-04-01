@@ -1,6 +1,7 @@
 import { useWhiteboxFiles } from "../stores/files"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
+import { useWhiteboxSearches } from "../stores/searches"
 import navigation from './navigation'
 
 export async function createMikser({ router, store, options }) {
@@ -48,7 +49,12 @@ export async function createMikser({ router, store, options }) {
 					return routesStore.collections
 				}
 			})
-
+			Object.defineProperty(app.config.globalProperties, '$hits', {
+				get() {
+					const searchesStore = useWhiteboxSearches()
+					return searchesStore.hits
+				}
+			})
 			
 			const documentsStore = useWhiteboxDocuments()
 			documentsStore.liveReload(!!options.preloadDocuments)
