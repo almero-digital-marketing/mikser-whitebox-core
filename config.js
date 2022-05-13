@@ -22,7 +22,8 @@ module.exports = (options, domainConfig) => {
             }),
             environment(options.mode == 'development' ? {
                 VUE_APP_WHITEBOX_DOMAIN: domainConfig.domain,
-                VUE_APP_WHITEBOX_CONTEXT: machineId
+                VUE_APP_WHITEBOX_CONTEXT: machineId,
+                VUE_APP_DEVELOPMENT_HOSTNAME: os.hostname()
             } : {
                 VUE_APP_WHITEBOX_DOMAIN: domainConfig.domain,
             }),
