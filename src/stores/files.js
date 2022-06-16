@@ -25,8 +25,8 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
                     let data = {
                         file,
                     }
-                    if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
-                        data.context = process.env['VUE_APP_WHITEBOX_CONTEXT']
+                    if (WHITEBOX_CONTEXT != 'mikser') {
+                        data.context = WHITEBOX_CONTEXT
                         data.cache = false
                     } else {
                         data.cache = true

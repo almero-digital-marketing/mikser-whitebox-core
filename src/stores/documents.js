@@ -258,8 +258,8 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 })
                 let dataContext
                 let queryContext = 'mikser'
-                if (typeof process != 'undefined' && process.env['VUE_APP_WHITEBOX_CONTEXT']) {
-                    dataContext = process.env['VUE_APP_WHITEBOX_CONTEXT']
+                if (queryContext != WHITEBOX_CONTEXT) {
+                    dataContext = WHITEBOX_CONTEXT
                     queryContext = queryContext + '_' + dataContext
                 }
 

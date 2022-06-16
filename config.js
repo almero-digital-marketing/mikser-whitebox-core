@@ -1,6 +1,5 @@
 const vue = require('@vitejs/plugin-vue')
 const html = require('vite-plugin-html').createHtmlPlugin
-const environment = require('vite-plugin-environment').default
 const os = require('os')
 const { machineIdSync } = require('node-machine-id')
 const path = require('path')
@@ -8,8 +7,24 @@ const path = require('path')
 module.exports = (options, domainConfig) => {
     const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
 
+    const constants = options.mode == 'development' ? {
+        WHITEBOX_DOMAIN: domainConfig.domain,
+        WHITEBOX_CONTEXT: machineId,
+        ...options.environment,
+    } : {
+        WHITEBOX_CONTEXT: 'mikser',
+        WHITEBOX_DOMAIN: domainConfig.domain,
+        ...options.environment,
+    }
+    const define = {}
+    for(let key in constants) {
+        console.log(key + ':', constants[key])
+        define[key] = JSON.stringify(constants[key])
+    }
+
     return {
         publicDir: 'out',
+        define,
         plugins: [
             vue(),
             html({
@@ -20,18 +35,18 @@ module.exports = (options, domainConfig) => {
                 },
                 minify: true,
             }),
-            environment(options.mode == 'development' ? {
-                VUE_APP_WHITEBOX_DOMAIN: domainConfig.domain,
-                VUE_APP_WHITEBOX_CONTEXT: machineId,
-                VUE_APP_DEVELOPMENT_HOSTNAME: os.hostname()
-            } : {
-                VUE_APP_WHITEBOX_DOMAIN: domainConfig.domain,
-            }),
         ],
         build: {
             outDir: 'out',
             sourcemap: options.mode == 'development',
             rollupOptions: {
+                plugins: [
+                    visualizer((opts) => {
+                        return { 
+                            filename: 'runtime/stats.html' 
+                        }
+                    })
+                ],
                 output: {
                     manualChunks: id => {
                         if (id.includes('node_modules')) {

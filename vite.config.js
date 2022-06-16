@@ -1,32 +1,53 @@
-import path from 'path'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+const vue = require('@vitejs/plugin-vue')
+const html = require('vite-plugin-html').createHtmlPlugin
+const os = require('os')
+const { machineIdSync } = require('node-machine-id')
+const path = require('path')
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue({
-    reactivityTransform: true
-  })],
-  build: {
-    lib: {
-      entry: path.resolve(__dirname, '/src/index.js'),
-      name: 'VueWhiteboxCore',
-      fileName: (format) => `vue-whitebox-core.${format}.js`
-    },
-    rollupOptions: {
-      // make sure to externalize deps that shouldn't be bundled
-      // into your library
-      external: ['vue', 'vue-demi', 'pinia'],
-      output: {
-        exports: 'named',
-        // Provide global variables to use in the UMD build
-        // for externalized deps
-        globals: {
-          pinia: 'Pinia',
-          vue: 'Vue',
-          'vue-demi': 'VueDemi'
+module.exports = (options, domainConfig) => {
+    const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
+
+    return {
+        publicDir: 'out',
+        define: options.mode == 'development' ? {
+            WHITEBOX_DOMAIN: JSON.stringify(domainConfig.domain),
+            WHITEBOX_CONTEXT: JSON.stringify(machineId),
+        } : {
+            WHITEBOX_DOMAIN: JSON.stringify(''),
+            WHITEBOX_CONTEXT: JSON.stringify('mikser'),
+        },
+        plugins: [
+            vue(),
+            html({
+                inject: {
+                    data: {
+                        domainConfig
+                    },
+                },
+                minify: true,
+            }),
+        ],
+        build: {
+            outDir: 'out',
+            sourcemap: options.mode == 'development',
+            rollupOptions: {
+                output: {
+                    manualChunks: id => {
+                        if (id.includes('node_modules')) {
+                            let moduleName = id.split(path.sep).slice(id.split(path.sep).indexOf('node_modules') + 1)[0]
+                            for(let key in options.vendorChunks) {
+                                if (options.vendorChunks[key].indexOf(moduleName) > -1) return 'vendor-' + key
+                            }
+                            if (moduleName.includes('whitebox')) {
+                                return 'vendor-whitebox';
+                            } else if (moduleName.includes('vue')) {
+                                return 'vendor-vue';
+                            }
+                            return 'vendor';
+                        }
+                    }
+                },
+            },
         }
-      }
-    },
-  },
-})
+    }
+} 
