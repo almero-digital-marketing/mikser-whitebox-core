@@ -7,6 +7,7 @@ const path = require('path')
 module.exports = (options, domainConfig) => {
     const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
 
+    console.log(options.mode)
     return {
         publicDir: 'out',
         define: options.mode == 'development' ? {
@@ -28,7 +29,7 @@ module.exports = (options, domainConfig) => {
             }),
         ],
         build: {
-            outDir: 'out',
+            outDir: options.mode == 'development' ? 'out' : 'dist',
             sourcemap: options.mode == 'development',
             rollupOptions: {
                 output: {
