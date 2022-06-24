@@ -3,6 +3,7 @@ const html = require('vite-plugin-html').createHtmlPlugin
 const os = require('os')
 const { machineIdSync } = require('node-machine-id')
 const path = require('path')
+const visualizer = require('rollup-plugin-visualizer').visualizer
 
 module.exports = (options, domainConfig) => {
     const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username

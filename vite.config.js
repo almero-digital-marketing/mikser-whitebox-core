@@ -10,7 +10,7 @@ module.exports = (options, domainConfig) => {
     return {
         publicDir: 'out',
         define: options.mode == 'development' ? {
-            WHITEBOX_DOMAIN: JSON.stringify(domainConfig.domain),
+            WHITEBOX_DOMAIN: JSON.stringify('almero.com'),
             WHITEBOX_CONTEXT: JSON.stringify(machineId),
         } : {
             WHITEBOX_DOMAIN: JSON.stringify(''),

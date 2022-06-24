@@ -19,12 +19,14 @@
   </div>
 </template>
 <script setup>
+import { ref } from 'vue'
+
 import { useWhiteboxDocuments } from "./stores/documents"
 import { useWhiteboxSearches } from "./stores/searches"
 import { metaField } from './lib/utils'
 
-let count = $ref(0)
-let query = $ref('') 
+let count = ref(0)
+let query = ref('') 
 function increment() {
   count++
 }
@@ -32,8 +34,9 @@ function increment() {
 const documents = useWhiteboxDocuments()
 documents.loadDocuments(['/web/translation'])
 
-import { onDocumentChanged } from './lib/hooks'
+import { onDocumentChanged, onCollectionLoaded } from './lib/hooks'
 onDocumentChanged((newValue, oldValue) => console.log('Document changed:', oldValue, '→', newValue))
+onCollectionLoaded('items', console.log)
 
 function search() {
   const searches = useWhiteboxSearches()
