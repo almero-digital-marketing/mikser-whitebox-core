@@ -42,6 +42,7 @@ async function main() {
         store: pinia, 
         options: {
             domain: "almero.com",
+            context: WHITEBOX_CONTEXT
         }
     })
     

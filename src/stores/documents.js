@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
-import { queryContext, dataContext } from '../lib/context'
+import { useWhitebox } from "../stores/whitebox"
 
 let feedPool = {} 
 
@@ -157,6 +157,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             if (!items) items = []
             const result = []
             const routesStore = useWhiteboxRoutes()
+            const { queryContext, dataContext } = useWhitebox()
             return new Promise(resolve => {
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
@@ -251,6 +252,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
         },
         liveReload(initial) {
             if (!window.whitebox) return
+            const { context } = useWhitebox()
             window.whitebox.init('feed', (feed) => {
                 window.whitebox.emmiter.on('feed.change', (change) => {
                     if (change.type != 'ready') console.log('Feed change', change)
@@ -258,8 +260,8 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 })
                 let dataContext
                 let queryContext = 'mikser'
-                if (queryContext != WHITEBOX_CONTEXT) {
-                    dataContext = WHITEBOX_CONTEXT
+                if (queryContext != context) {
+                    dataContext = context
                     queryContext = queryContext + '_' + dataContext
                 }
 

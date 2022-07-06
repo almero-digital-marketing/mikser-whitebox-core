@@ -38,7 +38,6 @@ module.exports = (options, domainConfig) => {
             }),
         ],
         build: {
-            outDir: 'out',
             sourcemap: options.mode == 'development',
             rollupOptions: {
                 plugins: [

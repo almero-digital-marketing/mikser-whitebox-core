@@ -41,8 +41,9 @@ onCollectionLoaded('items', console.log)
 function search() {
   const searches = useWhiteboxSearches()
   searches.multiMatch('projects', {
-    query,
+    query: query.value,
     fields: [
+      metaField('Project', 'company'), 
       metaField('Project', 'title'), 
       metaField('Project', 'overview')
     ],

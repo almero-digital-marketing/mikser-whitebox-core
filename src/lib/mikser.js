@@ -1,3 +1,4 @@
+import { useWhitebox } from "../stores/whitebox"
 import { useWhiteboxFiles } from "../stores/files"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
@@ -5,6 +6,9 @@ import { useWhiteboxSearches } from "../stores/searches"
 import navigation from './navigation'
 
 export async function createMikser({ router, store, options }) {
+	const whitebox = useWhitebox(store)
+	whitebox.context = options.context
+
 	const routesStore = useWhiteboxRoutes(store)
 	let routeDefinitions = {}
 	for (let route of router.options.routes) {

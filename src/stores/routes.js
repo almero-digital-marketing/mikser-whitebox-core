@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxDocuments } from '../stores/documents'
+import { useWhitebox } from "../stores/whitebox"
 
 export const useWhiteboxRoutes = defineStore('whitebox-routes', {
     state: () => {
@@ -83,6 +84,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			
             return new Promise((resolve, reject) => {
 				if (!window.whitebox) return resolve([])
+				const { context } = useWhitebox()
 				window.whitebox.init('feed', (feed) => {
 					let data = {
 						vault: 'feed',
@@ -90,14 +92,15 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 						projection: this.projection,
 						cache: '1h',
 					}
-					if (WHITEBOX_CONTEXT != 'mikser') {
-						data.context = WHITEBOX_CONTEXT
+					if (context != 'mikser') {
+						data.context = context
 						data.query.context = data.query.context + '_' + data.context
 					}
 					if (feed.service.catalogs.mikser) {
 						feed.service.catalogs.mikser
 						.find(data)
 						.then((documents) => {
+							console.log('Context:', context, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents.length)
 							let routes = []
 							for (let document of documents) {
 								const routeDefinition = routeDefinitions[document.data.meta.layout]

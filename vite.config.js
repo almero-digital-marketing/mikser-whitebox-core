@@ -29,26 +29,26 @@ module.exports = (options, domainConfig) => {
             }),
         ],
         build: {
-            outDir: options.mode == 'development' ? 'out' : 'dist',
-            sourcemap: options.mode == 'development',
-            rollupOptions: {
-                output: {
-                    manualChunks: id => {
-                        if (id.includes('node_modules')) {
-                            let moduleName = id.split(path.sep).slice(id.split(path.sep).indexOf('node_modules') + 1)[0]
-                            for(let key in options.vendorChunks) {
-                                if (options.vendorChunks[key].indexOf(moduleName) > -1) return 'vendor-' + key
-                            }
-                            if (moduleName.includes('whitebox')) {
-                                return 'vendor-whitebox';
-                            } else if (moduleName.includes('vue')) {
-                                return 'vendor-vue';
-                            }
-                            return 'vendor';
-                        }
-                    }
-                },
+            lib: {
+              entry: path.resolve(__dirname, '/src/index.js'),
+              name: 'VueWhiteboxCore',
+              fileName: (format) => `vue-whitebox-core.${format}.js`
             },
+            rollupOptions: {
+              // make sure to externalize deps that shouldn't be bundled
+              // into your library
+              external: ['vue', 'vue-demi', 'pinia'],
+              output: {
+                exports: 'named',
+                // Provide global variables to use in the UMD build
+                // for externalized deps
+                globals: {
+                  pinia: 'Pinia',
+                  vue: 'Vue',
+                  'vue-demi': 'VueDemi'
+                }
+              }
+            }
         }
     }
 } 

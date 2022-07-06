@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useWhitebox } from "../stores/whitebox"
 
 export const useWhiteboxFiles = defineStore('whitebox-files', {
     state: () => {
@@ -20,13 +21,14 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
 			return this.filemap[file] || ''
         },
         link(file) {
+            const { context } = useWhitebox()
             window.whitebox.init('storage', (storage) => {
                 if (storage) {
                     let data = {
                         file,
                     }
-                    if (WHITEBOX_CONTEXT != 'mikser') {
-                        data.context = WHITEBOX_CONTEXT
+                    if (context != 'mikser') {
+                        data.context = context
                         data.cache = false
                     } else {
                         data.cache = true
