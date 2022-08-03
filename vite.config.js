@@ -27,6 +27,16 @@ module.exports = (options, domainConfig) => {
                 },
                 minify: true,
             }),
+            {
+                name: 'gate',
+                configureServer(server) {
+                    server.httpServer?.once('listening',() => {
+                        setTimeout(() => {
+                            console.log('  > Public:  ',`https://${server.config.server.port}-${os.hostname().split('.')[0]}.dev.w8x.io/\n`);
+                        }, 1000)
+                    })
+                }
+            }
         ],
         build: {
             lib: {
