@@ -32,7 +32,7 @@ module.exports = (options, domainConfig) => {
                 configureServer(server) {
                     server.httpServer?.once('listening',() => {
                         setTimeout(() => {
-                            console.log('  > Public:  ',`https://${server.config.server.port}-${os.hostname().split('.')[0]}.dev.w8x.io/\n`);
+                            console.log('  > Public:  ',`https://${server.config.server.port}-${os.hostname().split('.')[0]}.dev.whitebox.pro/\n`);
                         }, 1000)
                     })
                 }
