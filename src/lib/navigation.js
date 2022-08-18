@@ -8,7 +8,6 @@ export default {
         router.beforeEach((to, from, next) => {
             const routesStore = useWhiteboxRoutes()
             const documentsStore = useWhiteboxDocuments()
-           
             
             let documents = []
             const toRefId = decodeURI(to.path)

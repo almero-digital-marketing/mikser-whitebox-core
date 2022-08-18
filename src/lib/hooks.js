@@ -18,7 +18,16 @@ function onCollectionLoaded(collection, callback) {
     watch(documentsStore.document.documentRoute.collections[collection], () => callback(routesStore.collections[collection]))
 }
 
+function onVersionChanged(version, callback) {
+    const oldVersion = localStorage.getItem('WHITEBOX_VERSION')
+    if (oldVersion != version) {
+        callback(oldVersion)
+    }
+    localStorage.setItem('WHITEBOX_VERSION', version)
+}
+
 export {
     onDocumentChanged,
-    onCollectionLoaded
+    onCollectionLoaded,
+    onVersionChanged
 }
