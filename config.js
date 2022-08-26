@@ -4,6 +4,7 @@ const os = require('os')
 const { machineIdSync } = require('node-machine-id')
 const path = require('path')
 const visualizer = require('rollup-plugin-visualizer').visualizer
+const fs = require('fs/promises')
 
 module.exports = (options, domainConfig) => {
     const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
@@ -24,7 +25,7 @@ module.exports = (options, domainConfig) => {
     }
 
     return {
-        publicDir: 'out',
+        publicDir: options.mode == 'development' ? '../out' : path.join(options.mikserFolder || '../mikser', 'files'),
         define,
         plugins: [
             vue(),
@@ -39,7 +40,7 @@ module.exports = (options, domainConfig) => {
             {
                 name: 'gate',
                 configureServer(server) {
-                    server.httpServer?.once('listening',() => {
+                    server.httpServer?.once('listening', () => {
                         setTimeout(() => {
                             console.log('  🌐 Public: ',`https://${server.config.server.port}-${os.hostname().split('.')[0]}.dev.whitebox.pro/\n`);
                         }, 100)
@@ -48,6 +49,7 @@ module.exports = (options, domainConfig) => {
             }
         ],
         build: {
+            outDir: '../out',
             sourcemap: options.mode == 'development',
             rollupOptions: {
                 plugins: [
@@ -55,7 +57,13 @@ module.exports = (options, domainConfig) => {
                         return { 
                             filename: 'runtime/stats.html' 
                         }
-                    })
+                    }),
+                    {
+                        name: 'layout-template',
+                        writeBundle: (options) => {
+                            return fs.rename(path.join(options.dir, 'index.html'), path.join(options.dir, 'template.html'))
+                        }
+                    }
                 ],
                 output: {
                     manualChunks: id => {
