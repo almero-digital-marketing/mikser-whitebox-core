@@ -3,6 +3,8 @@ import { useWhiteboxFiles } from "../stores/files"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
 import { useWhiteboxSearches } from "../stores/searches"
+import { useWhiteboxTracking } from "../stores/tracking"
+
 import navigation from './navigation'
 
 export async function createMikser({ router, store, options }) {
@@ -57,6 +59,29 @@ export async function createMikser({ router, store, options }) {
 				get() {
 					const searchesStore = useWhiteboxSearches()
 					return searchesStore.hits
+				}
+			})
+			Object.defineProperty(app.config.globalProperties, '$track', {
+				get() {
+					const tracking = useWhiteboxTracking()
+					return {
+						custom: tracking.custom,
+						pageView: tracking.pageView,
+						addToCart: tracking.addToCart,
+						removeFromCart: tracking.removeFromCart,
+						addToWishlist: tracking.addToWishlist,
+						completeRegistration: tracking.completeRegistration,
+						lead: tracking.lead,
+						contact: tracking.contact,
+						findLocation: tracking.findLocation,
+						initiateCheckout: tracking.initiateCheckout,
+						purchase: tracking.purchase,
+						schedule: tracking.schedule,
+						search: tracking.search,
+						startTrial: tracking.startTrial,
+						subscribe: tracking.subscribe,
+						viewContent: tracking.viewContent
+					}
 				}
 			})
 			

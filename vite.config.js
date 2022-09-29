@@ -47,7 +47,7 @@ module.exports = (options, domainConfig) => {
             rollupOptions: {
               // make sure to externalize deps that shouldn't be bundled
               // into your library
-              external: ['vue', 'vue-demi', 'pinia'],
+              external: ['vue', 'vue-demi', 'pinia', 'axios'],
               output: {
                 exports: 'named',
                 // Provide global variables to use in the UMD build
@@ -55,7 +55,8 @@ module.exports = (options, domainConfig) => {
                 globals: {
                   pinia: 'Pinia',
                   vue: 'Vue',
-                  'vue-demi': 'VueDemi'
+                  'vue-demi': 'VueDemi',
+                  'axios': 'Axios'
                 }
               }
             }
