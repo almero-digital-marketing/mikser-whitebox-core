@@ -87,6 +87,10 @@ export async function createMikser({ router, store, options }) {
 			
 			const documentsStore = useWhiteboxDocuments()
 			documentsStore.liveReload(!!options.preloadDocuments)
+
+			const tracking = useWhiteboxTracking()
+			tracking.utm()
+			tracking.w8x()
 		}
 	}
 }
