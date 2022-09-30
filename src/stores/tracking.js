@@ -499,6 +499,27 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: method,
             })
         },
+        async customizeProduct(identities) {
+            console.log('Track customize product')
+            
+            if (window.fbq) {
+                const eventId = uuidv4()
+                const context = {}
+                fbq('track', 'CustomizeProduct', context, { eventID: eventId })
+                await trackServerSide({
+                    event: 'CustomizeProduct',
+                    application: 'mikser',
+                    context,
+                    eventId,
+                    url: window.location.href,
+                    identities
+                })
+            }
+            await trackContext({
+                action: 'subscribe',
+                context: info,
+            })
+        },
         async utm() {
             const queryString = window.location.search
             const urlParams = new URLSearchParams(queryString)

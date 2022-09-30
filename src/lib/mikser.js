@@ -66,7 +66,6 @@ export async function createMikser({ router, store, options }) {
 					const tracking = useWhiteboxTracking()
 					return {
 						custom: tracking.custom,
-						pageView: tracking.pageView,
 						addToCart: tracking.addToCart,
 						removeFromCart: tracking.removeFromCart,
 						addToWishlist: tracking.addToWishlist,
@@ -80,7 +79,8 @@ export async function createMikser({ router, store, options }) {
 						search: tracking.search,
 						startTrial: tracking.startTrial,
 						subscribe: tracking.subscribe,
-						viewContent: tracking.viewContent
+						viewContent: tracking.viewContent,
+						customizeProduct: tracking.customizeProduct
 					}
 				}
 			})
