@@ -516,7 +516,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
 
                 if (window.fbq) {
                     const eventId = uuidv4()
-                    let event = source + ' ' + medium
+                    let event = source + medium
                     fbq('trackCustom', event, {
                         source,
                         medium,
