@@ -1,6 +1,5 @@
 import { useWhiteboxDocuments } from '../stores/documents'
 import { useWhiteboxRoutes } from "../stores/routes"
-import { useWhiteboxTracking } from '../stores/tracking'
 
 export default {
     install: (app) => {
@@ -38,17 +37,10 @@ export default {
             .catch(err => next(err))
         })
         
-        router.afterEach((to, from) => {
+        router.afterEach((to) => {
             const routesStore = useWhiteboxRoutes()
             routesStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
             routesStore.loadRoute(router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)).catch(console.error)
-
-            if (from.path != to.path) {
-                const trackingStore = useWhiteboxTracking()
-                setTimeout(() => {
-                    trackingStore.pageView(to.path)
-                }, 100)
-            }
         })
     }
 }

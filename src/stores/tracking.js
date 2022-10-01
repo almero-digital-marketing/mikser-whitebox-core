@@ -25,11 +25,11 @@ function items2gtag(items) {
                 item_list_name: item.listName,
                 item_variant: item.variant,
                 location_id: item.locationId,
-                price: item.price,
+                price: (item.price || 0).toFixed(2),
                 quantity: item.quantity || 1
             },
             currency: items[0].currency,
-            value: items.reduce((sum, item) => sum + (item.quantity || 1) * (item.price - (item.discount || 0)), 0),
+            value: items.reduce((sum, item) => sum + (item.quantity || 1) * ((item.price || 0) - (item.discount || 0)), 0).toFixed(2),
         }
     })
 }
@@ -37,17 +37,17 @@ function items2gtag(items) {
 function items2fbq(items) {
     if (!items) return {}
     return {
-        content_ids: items.map(item => item.itemId),
+        content_ids: items.map(item => item.itemId.toString()),
         content_type: 'product',
         contents: items.map(item => {
             return {
-                id: item.itemId,
-                quantity: item.quantity
+                id: item.itemId.toString(),
+                quantity: item.quantity || 1
             }
         }),
         content_name: items.map(item => item.name).join(', '),
         currency: items[0].currency,
-        value: items.reduce((sum, item) => sum + (item.quantity || 1) * (item.price - (item.discount || 0)), 0),
+        value: items.reduce((sum, item) => sum + (item.quantity || 1) * ((item.price || 0) - (item.discount || 0)), 0).toFixed(2),
     }
 }
 
@@ -82,32 +82,69 @@ async function trackContext(data) {
 
 export const useWhiteboxTracking = defineStore('whitebox-tracking', {
     actions: {
-        custom(action, data) {
-            window.whitebox?.services?.analytics?.context(action, data) 
-                || 
-            window.whitebox?.init('analytics', analytics => analytics.service.context(action, data))
-        },
-        async pageView(path, identities) {          
-            console.log('Track page view:', decodeURI(path))
-           
-            if (window.gtag) {
-                gtag('set', 'page_path', decodeURI(path))
-                gtag('event', 'page_view')
-            }
-
+        async start() {
             if (window.fbq) {
                 const eventId = uuidv4()
+                const context = {}
                 fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
                 await trackServerSide({
                     event: 'PageView',
                     application: 'mikser',
-                    context: decodeURI(path),
+                    context,
                     eventId,
                     url: window.location.href,
-                    identities
                 })            
+            }
+
+            const queryString = window.location.search
+            const urlParams = new URLSearchParams(queryString)
+            if (urlParams.has('utm_source')) {
+                const source = urlParams.get('utm_source')
+                const medium = urlParams.get('utm_medium')
+                const campaign = urlParams.get('utm_campaign')
+
+                console.log('Track utm:', source, medium, campaign)
+
+                if (window.fbq) {
+                    const eventId = uuidv4()
+                    let event = 'Utm'+ source.charAt(0).toUpperCase() + source.slice(1)
+                    const context = {
+                        source,
+                        medium,
+                        campaign,
+                    }
+                    fbq('trackCustom', event, context, { eventID: eventId })
+                    await trackServerSide({
+                        event,
+                        application: 'mikser',
+                        context,
+                        eventId,
+                        url: window.location.href,
+                    })
+                }
+            }
+
+            window.whitebox?.init('shortener', shortener => {
+                if (shortener) {
+                    if (shortener.service.data?.email || shortener.service.data?.phone) {
+                        this.contact(shortener.service.data)
+                    }
+                }
+            })
+        },
+        custom(action, data) {
+            window.whitebox?.services?.analytics?.context(action, data) 
+                || 
+            window.whitebox?.init('analytics', analytics => analytics.service.context(action, data))
+        },
+        async pageView(path, identities) {          
+            console.log('Track page view:', decodeURI(window.location.pathname))
+           
+            if (window.gtag) {
+                gtag('set', 'page_path', decodeURI(window.location.pathname))
+                gtag('event', 'page_view')
             }
 
             window.whitebox?.init('analytics', analytics => {
@@ -276,9 +313,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                fbq('track', 'FindLocation', context, {
-                    eventID: eventId,
-                })
+                fbq('track', 'FindLocation', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'FindLocation',
                     application: 'mikser',
@@ -521,42 +556,8 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             })
         },
         async utm() {
-            const queryString = window.location.search
-            const urlParams = new URLSearchParams(queryString)
-            if (urlParams.has('utm_source')) {
-                const source = urlParams.get('utm_source')
-                const medium = urlParams.get('utm_medium')
-                const campaign = urlParams.get('utm_campaign')
-
-                console.log('Track utm:', source, medium, campaign)
-
-                if (window.fbq) {
-                    const eventId = uuidv4()
-                    let event = 'Utm'+ source.charAt(0).toUpperCase() + source.slice(1)
-                    const context = {
-                        source,
-                        medium,
-                        campaign,
-                    }
-                    fbq('trackCustom', event, context, { eventID: eventId })
-                    await trackServerSide({
-                        event,
-                        application: 'mikser',
-                        context,
-                        eventId,
-                        url: window.location.href,
-                    })
-                }
-            }
         },
         async w8x() {
-            window.whitebox?.init('shortener', shortener => {
-                if (shortener) {
-                    if (shortener.service.data?.email || shortener.service.data?.phone) {
-                        this.contact(shortener.service.data)
-                    }
-                }
-            })
         }
     }
 })

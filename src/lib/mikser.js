@@ -4,6 +4,7 @@ import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
 import { useWhiteboxSearches } from "../stores/searches"
 import { useWhiteboxTracking } from "../stores/tracking"
+import { onDocumentChanged } from './hooks'
 
 import navigation from './navigation'
 
@@ -89,8 +90,8 @@ export async function createMikser({ router, store, options }) {
 			documentsStore.liveReload(!!options.preloadDocuments)
 
 			const tracking = useWhiteboxTracking()
-			tracking.utm()
-			tracking.w8x()
+			tracking.start()
+			onDocumentChanged(tracking.pageView)
 		}
 	}
 }
