@@ -5,9 +5,9 @@ axios.defaults.withCredentials = true
 
 function items2gtag(items) {
     if (!items) return {}
-    return items.map((item, index) => {
-        return {
-            items: {
+    return {
+        items: items.map((item, index) => {
+            return {
                 item_id: item.itemId,
                 item_name: item.name,
                 affiliation: item.affiliation,
@@ -27,11 +27,11 @@ function items2gtag(items) {
                 location_id: item.locationId,
                 price: (item.price || 0).toFixed(2),
                 quantity: item.quantity || 1
-            },
-            currency: items[0].currency,
-            value: items.reduce((sum, item) => sum + (item.quantity || 1) * ((item.price || 0) - (item.discount || 0)), 0).toFixed(2),
-        }
-    })
+            }
+        }),
+        currency: items[0].currency,
+        value: items.reduce((sum, item) => sum + (item.quantity || 1) * ((item.price || 0) - (item.discount || 0)), 0).toFixed(2),   
+    }
 }
 
 function items2fbq(items) {
@@ -219,7 +219,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             })
         },
         async completeRegistration(method, identities) {
-            console.log('Track add to complete registration:', method)
+            console.log('Track complete registration:', method)
             
             if (window.gtag) {
                 gtag('event', 'sign_up', { method })
@@ -300,19 +300,22 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 vaultId: analytics.runtime.vaultId
             })
         },
-        async findLocation(locationId, identities) {
-            console.log('Track find location:', locationId)
+        async findLocation(location, identities) {
+            console.log('Track find location:', location.category, location.locationId)
             
             if (window.gtag) {
                 gtag('event', 'select_content', { 
-                    content_type: 'location',
-                    item_id: locationId
+                    content_type: location.category ? 'location_' + location.category : 'location',
+                    item_id: location.locationId
                 })
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
-                const context = {}
+                const context = {
+                    content_category: location.category ? 'location_' + location.category : 'location',
+                    content_name: location.locationId
+                }
                 fbq('track', 'FindLocation', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'FindLocation',
@@ -325,7 +328,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             }
             await trackContext({
                 action: 'findLocation',
-                context: locationId,
+                context: location.locationId,
             })
         },
         async initiateCheckout(items, identities) {
@@ -349,7 +352,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })          
             }
             await trackContext({
-                action: 'addToCart',
+                action: 'initiateCheckout',
                 context: items,
             })
         },
@@ -363,6 +366,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
+                context.transaction_id = eventId
                 fbq('track', 'Purchase', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Purchase',
@@ -374,7 +378,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })
             }
             await trackContext({
-                action: 'addToCart',
+                action: 'purchase',
                 context: items,
             })
         },
