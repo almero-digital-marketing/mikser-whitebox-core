@@ -66,6 +66,7 @@ export async function createMikser({ router, store, options }) {
 				get() {
 					const tracking = useWhiteboxTracking()
 					return {
+						identity: tracking.identity,
 						custom: tracking.custom,
 						addToCart: tracking.addToCart,
 						removeFromCart: tracking.removeFromCart,
@@ -86,12 +87,14 @@ export async function createMikser({ router, store, options }) {
 				}
 			})
 			
-			const documentsStore = useWhiteboxDocuments()
+			const documentsStore = useWhiteboxDocuments(store)
 			documentsStore.liveReload(!!options.preloadDocuments)
 
-			const tracking = useWhiteboxTracking()
-			tracking.start()
-			onDocumentChanged(tracking.pageView)
+			const tracking = useWhiteboxTracking(store)
+			tracking.options = options
+			onDocumentChanged(() => {
+				tracking.pageView()
+			})
 		}
 	}
 }

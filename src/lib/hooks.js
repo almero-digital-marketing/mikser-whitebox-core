@@ -4,7 +4,6 @@ import { watch } from 'vue'
 
 function onDocumentChanged(callback) {
     const routesStore = useWhiteboxRoutes()
-
     routesStore.$subscribe(({ events }) => {
         if (events?.key == 'currentRefId') {
             callback(events.newValue, events.oldValue)

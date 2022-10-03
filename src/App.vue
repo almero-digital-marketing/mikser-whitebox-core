@@ -19,11 +19,12 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 import { useWhiteboxDocuments } from "./stores/documents"
 import { useWhiteboxSearches } from "./stores/searches"
 import { metaField } from './lib/utils'
+import { useWhiteboxTracking } from "./stores/tracking"
 
 let count = ref(0)
 let query = ref('') 
@@ -56,6 +57,11 @@ function search() {
 //     query: 'Med Pro'
 //   }
 // })
+
+onMounted(() => {
+  const tracking = useWhiteboxTracking()
+  tracking.start()
+})
 
 </script>
 <style>

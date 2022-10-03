@@ -81,12 +81,50 @@ async function trackContext(data) {
 }
 
 export const useWhiteboxTracking = defineStore('whitebox-tracking', {
+    state: () => {
+        return {
+            identities: {},
+            options: {}
+        }
+    },
     actions: {
-        async start() {
+        async identity(identities) {
+            let diff = false
+            for (let key in identities) {
+                if (this.identities[key] != identities[key]) {
+                    diff = true
+                    break
+                }
+            }
+            if (diff) {
+                console.log('Track identity')
+                if (window.fbq) {
+                    if (identities.name) {
+                        identities.firstName = identities.name.split(' ')[0]
+                        identities.lastName = identities.name.replace(identities.firstName + ' ', '')
+                    }
+                    window.fbq('init', this.options.fbq, {
+                        em: identities.email,
+                        ph: identities.first,
+                        fn: identities.firstName,
+                        ln: identities.lastName,
+                        db: identities.birthdate?.toString().replace(/\//g, ''),
+                        ge: identities.gender,
+                        country: identities.country
+                    })
+                }
+            }
+            this.identities = identities
+        },
+        async start(options) {
+            if (options) {
+                this.options = options
+            }
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                fbq('track', 'PageView', {}, {
+                window.fbq('init', this.options.fbq, {})
+                window.fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
                 await trackServerSide({
@@ -96,6 +134,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     eventId,
                     url: window.location.href,
                 })            
+            }
+
+            if (window.gtag) {
+                window.gtag('js', new Date());
+                window.gtag('config', this.options.gtag);    
             }
 
             const queryString = window.location.search
@@ -115,7 +158,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         medium,
                         campaign,
                     }
-                    fbq('trackCustom', event, context, { eventID: eventId })
+                    window.fbq('trackCustom', event, context, { eventID: eventId })
                     await trackServerSide({
                         event,
                         application: 'mikser',
@@ -139,12 +182,12 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 || 
             window.whitebox?.init('analytics', analytics => analytics.service.context(action, data))
         },
-        async pageView(path, identities) {          
+        async pageView() {          
             console.log('Track page view:', decodeURI(window.location.pathname))
            
             if (window.gtag) {
-                gtag('set', 'page_path', decodeURI(window.location.pathname))
-                gtag('event', 'page_view')
+                window.gtag('set', 'page_path', decodeURI(window.location.pathname))
+                window.gtag('event', 'page_view')
             }
 
             window.whitebox?.init('analytics', analytics => {
@@ -153,24 +196,24 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 }
             })
         },
-        async addToCart(items, identities) {           
+        async addToCart(items) {           
             console.log('Track add to cart:', items.map(item => item.name).join(', '))
                       
             if (window.gtag) {
-                gtag('event', 'add_to_cart', items2gtag(items))
+                window.gtag('event', 'add_to_cart', items2gtag(items))
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
-                fbq('track', 'AddToCart', context, { eventID: eventId })
+                window.fbq('track', 'AddToCart', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'AddToCart',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
 
@@ -183,7 +226,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             console.log('Track remove from cart:', items.map(item => item.name).join(', '))
            
             if (window.gtag) {
-                gtag('event', 'remove_from_cart', items2gtag(items))
+                window.gtag('event', 'remove_from_cart', items2gtag(items))
             }
 
             await trackContext({
@@ -192,24 +235,24 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             })
 
         },
-        async addToWishlist(items, identities) {
+        async addToWishlist(items) {
             console.log('Track add to wishlist:', items.map(item => item.name).join(', '))
             
             if (window.gtag) {
-                gtag('event', 'add_to_wishlist', items2gtag(items))
+                window.gtag('event', 'add_to_wishlist', items2gtag(items))
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
-                fbq('track', 'AddToWishlist', context, { eventID: eventId })
+                window.fbq('track', 'AddToWishlist', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'AddToWishlist',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
 
@@ -218,24 +261,24 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: items,
             })
         },
-        async completeRegistration(method, identities) {
+        async completeRegistration(method) {
             console.log('Track complete registration:', method)
             
             if (window.gtag) {
-                gtag('event', 'sign_up', { method })
+                window.gtag('event', 'sign_up', { method })
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = { content_name: method }
-                fbq('track', 'CompleteRegistration', context, { eventID: eventId })
+                window.fbq('track', 'CompleteRegistration', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'CompleteRegistration',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -243,11 +286,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: method,
             })
         },
-        async lead(info, identities) {
+        async lead(info) {
             console.log('Track lead:', info.currency, info.value)
             
             if (window.gtag) {
-                gtag('event', 'generate_lead', { 
+                window.gtag('event', 'generate_lead', { 
                     currency: info.currency,
                     value: info.value,
                 })
@@ -261,14 +304,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     currency: info.currency,
                     value: info.value,
                 }
-                fbq('track', 'Lead', context, { eventID: eventId })
+                window.fbq('track', 'Lead', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Lead',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
 
@@ -283,7 +326,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                fbq('track', 'Contact', context, {
+                window.fbq('track', 'Contact', context, {
                     eventID: eventId,
                 })
                 await trackServerSide({
@@ -292,7 +335,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -300,11 +343,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 vaultId: analytics.runtime.vaultId
             })
         },
-        async findLocation(location, identities) {
+        async findLocation(location) {
             console.log('Track find location:', location.category, location.locationId)
             
             if (window.gtag) {
-                gtag('event', 'select_content', { 
+                window.gtag('event', 'select_content', { 
                     content_type: location.category ? 'location_' + location.category : 'location',
                     item_id: location.locationId
                 })
@@ -316,14 +359,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     content_category: location.category ? 'location_' + location.category : 'location',
                     content_name: location.locationId
                 }
-                fbq('track', 'FindLocation', context, { eventID: eventId })
+                window.fbq('track', 'FindLocation', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'FindLocation',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })           
             }
             await trackContext({
@@ -331,24 +374,24 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: location.locationId,
             })
         },
-        async initiateCheckout(items, identities) {
+        async initiateCheckout(items) {
             console.log('Track initiate checkout:', items?.map(item => item.name).join(', '))
             
             if (window.gtag) {
-                gtag('event', 'begin_checkout', items2gtag(items))
+                window.gtag('event', 'begin_checkout', items2gtag(items))
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
-                fbq('track', 'InitiateCheckout', context, { eventID: eventId })
+                window.fbq('track', 'InitiateCheckout', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'InitiateCheckout',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })          
             }
             await trackContext({
@@ -356,25 +399,25 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: items,
             })
         },
-        async purchase(items, identities) {
+        async purchase(items) {
             console.log('Track purchase:', items.map(item => item.name).join(', '))
             
             if (window.gtag) {
-                gtag('event', 'purchase', items2gtag(items))
+                window.gtag('event', 'purchase', items2gtag(items))
             }
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 context.transaction_id = eventId
-                fbq('track', 'Purchase', context, { eventID: eventId })
+                window.fbq('track', 'Purchase', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Purchase',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -382,31 +425,31 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: items,
             })
         },
-        async schedule(identities) {
+        async schedule() {
             console.log('Track schedule')
                     
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                fbq('track', 'Schedule', context, { eventID: eventId })
+                window.fbq('track', 'Schedule', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Schedule',
                     application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
                 action: 'contact',
             })
         },
-        async search(term,identities) {
+        async search(term) {
             console.log('Track lead:', term)
             
             if (window.gtag) {
-                gtag('event', 'search', { 
+                window.gtag('event', 'search', { 
                     search_term: term,
                 })
             }
@@ -414,14 +457,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = { search_string: term }
-                fbq('track', 'Search', context, { eventID: eventId })
+                window.fbq('track', 'Search', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Search',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -429,11 +472,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: term,
             })
         },
-        async startTrial(info, identities) {
+        async startTrial(info) {
             console.log('Track start trail:', info.currency, info.value, info.predictedLtv)
             
             if (window.gtag) {
-                gtag('event', 'generate_lead', { 
+                window.gtag('event', 'generate_lead', { 
                     currency: info.currency,
                     value: info.value,
                 })
@@ -446,14 +489,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     value: info.value,
                     predicted_ltv: info.predictedLtv,
                 }
-                fbq('track', 'StartTrial', context, { eventID: eventID })
+                window.fbq('track', 'StartTrial', context, { eventID: eventID })
                 await trackServerSide({
                     event: 'StartTrial',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -461,11 +504,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: info,
             })
         },
-        async subscribe(info = {}, identities) {
+        async subscribe(info = {}) {
             console.log('Track subscribe:', info.currency, info.value, info.predictedLtv)
             
             if (window.gtag) {
-                gtag('event', 'generate_lead', { 
+                window.gtag('event', 'generate_lead', { 
                     currency: info.currency,
                     value: info.value || 0,
                 })
@@ -478,14 +521,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     value: info.value || 0,
                     predicted_ltv: info.predictedLtv || 0,
                 }
-                fbq('track', 'Subscribe', context, { eventID: eventId })
+                window.fbq('track', 'Subscribe', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Subscribe',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -493,11 +536,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: info,
             })
         },
-        async viewContent(info = {}, identities) {
+        async viewContent(info = {}) {
             console.log('Track view content:', info.category, info.name, info.contentId, info.currency, info.value)
             
             if (window.gtag) {
-                gtag('event', 'select_content', { 
+                window.gtag('event', 'select_content', { 
                     content_type: info.category,
                     item_id: info.contentId,
                 })
@@ -512,14 +555,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     currency: info.currency,
                     value: info.value,
                 }
-                fbq('track', 'ViewContent', context, { eventID: eventId })
+                window.fbq('track', 'ViewContent', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'ViewContent',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -531,27 +574,27 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             console.log('Track login:', method)
             
             if (window.gtag) {
-                gtag('event', 'login', { method })
+                window.gtag('event', 'login', { method })
             }
             await trackContext({
                 action: 'login',
                 context: method,
             })
         },
-        async customizeProduct(identities) {
+        async customizeProduct() {
             console.log('Track customize product')
             
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                fbq('track', 'CustomizeProduct', context, { eventID: eventId })
+                window.fbq('track', 'CustomizeProduct', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'CustomizeProduct',
                     application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities
+                    identities: this.identities
                 })
             }
             await trackContext({
@@ -559,9 +602,5 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: info,
             })
         },
-        async utm() {
-        },
-        async w8x() {
-        }
     }
 })
