@@ -3,6 +3,18 @@ import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 axios.defaults.withCredentials = true
 
+function fbp() {
+    let result = /_fbp=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie)
+    if (!(result && result[1])) return null
+    return result[1];
+}
+
+function fbc() {
+    let result = /_fbc=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie);
+    if (!(result && result[1])) return null
+    return result[1];
+}
+
 function items2gtag(items) {
     if (!items) return {}
     return {
@@ -110,7 +122,8 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         ln: identities.lastName,
                         db: identities.birthdate?.toString().replace(/\//g, ''),
                         ge: identities.gender,
-                        country: identities.country
+                        country: identities.country,
+                        external_Id: document.documentElement.getAttribute('data-whitebox-fingerprint')
                     })
                 }
             }
@@ -123,7 +136,12 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                window.fbq('init', this.options.fbq, {})
+                this.identities.fbp = fbp()
+                this.identities.fbc = fbc()
+
+                window.fbq('init', this.options.fbq, {
+                    external_Id: document.documentElement.getAttribute('data-whitebox-fingerprint')
+                })
                 window.fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
@@ -132,6 +150,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     context,
                     eventId,
                     url: window.location.href,
+                    identities: this.identities
                 })            
             }
 
@@ -163,6 +182,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         context,
                         eventId,
                         url: window.location.href,
+                        identities: this.identities
                     })
                 }
             }
@@ -333,7 +353,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             }
             await trackContext({
                 action: 'contact',
-                vaultId: analytics.runtime.vaultId
+                context: {}
             })
         },
         async findLocation(location) {
