@@ -3,15 +3,23 @@ import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 axios.defaults.withCredentials = true
 
-function fbp() {
+function getFbp() {
     let result = /_fbp=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie)
     if (!(result && result[1])) return null
-    return result[1];
+    return result[1]
 }
 
-function fbc() {
+function getFbc() {
     let result = /_fbc=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie);
-    if (!(result && result[1])) return null
+    if (!(result && result[1])) {
+        if(window.location.search.includes('fbclid=')){
+            const queryString = window.location.search
+            const urlParams = new URLSearchParams(queryString)
+            fbc = 'fb.1.'+ (+new Date()) +'.'+ urlParams.get('fbclid')
+        } else {
+            return null
+        }
+    }
     return result[1];
 }
 
@@ -95,39 +103,55 @@ async function trackContext(data) {
 export const useWhiteboxTracking = defineStore('whitebox-tracking', {
     state: () => {
         return {
-            identities: {},
+            identities: [],
             options: {}
         }
     },
     actions: {
         async identity(identities) {
-            let diff = false
-            for (let key in identities) {
-                if (this.identities[key] != identities[key]) {
-                    diff = true
-                    break
+            if (!window.whitebox) return
+            const { connect } = window.whitebox.services
+            return axios.post(`${connect.runtime.url}/identity`, {
+                identities
+            }, {
+                headers: {
+                    'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
+                    'Fingerprint': connect.runtime.fingerprint,
                 }
-            }
-            if (diff) {
-                console.log('Track identity')
-                if (window.fbq) {
-                    if (identities.name) {
-                        identities.firstName = identities.name.split(' ')[0]
-                        identities.lastName = identities.name.replace(identities.firstName + ' ', '')
+            })
+            .then((response) => {
+                let diff = false
+                const currentIdentities = [...this.identities]
+                console.log('Current identities:', currentIdentities)
+                for (let identity of response.data.identities) {
+                    let userIdentiy = currentIdentities.find(({ key, name }) => key == identity.key && name == identity.name)
+                    if (userIdentiy && userIdentiy.value != identity.value) {
+                        userIdentiy.value = identity.value
+                        diff = true
+                    } else if (!userIdentiy) {
+                        this.identities.push(identity)
+                        diff = true
                     }
-                    window.fbq('init', this.options.fbq, {
-                        em: identities.email,
-                        ph: identities.first,
-                        fn: identities.firstName,
-                        ln: identities.lastName,
-                        db: identities.birthdate?.toString().replace(/\//g, ''),
-                        ge: identities.gender,
-                        country: identities.country,
-                        external_Id: document.documentElement.getAttribute('data-whitebox-fingerprint')
-                    })
                 }
-            }
-            this.identities = identities
+                if (diff) {
+                    console.log('Track identity')
+                    if (window.fbq) {
+                        const userData = {
+                            em: this.identities.find(({ name }) => name == 'email')?.value,
+                            ph: this.identities.find(({ name }) => name == 'e164')?.value.replace('+',''),
+                            fn: this.identities.find(({ name }) => name == 'firstname')?.value,
+                            ln: this.identities.find(({ name }) => name == 'lastname')?.value,
+                            db: this.identities.find(({ name }) => name == 'birthdate')?.value.replace(/\//g, ''),
+                            ge: this.identities.find(({ name }) => name == 'gender')?.value,
+                            country: this.identities.find(({ name }) => name == 'country')?.value,
+                            external_Id: connect.runtime.fingerprint
+                        }
+                        console.log('User data:', userData)
+                        window.fbq('init', this.options.fbq, userData)
+                    }
+                }
+            })
+
         },
         async start(options) {
             if (options) {
@@ -136,11 +160,19 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
-                this.identities.fbp = fbp()
-                this.identities.fbc = fbc()
 
+                const fbp = getFbp()
+                if (fbp) {
+                    this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
+                }
+                const fbc = getFbc()
+                if (fbc) {
+                    this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
+                }
+
+                const { connect } = window.whitebox.services
                 window.fbq('init', this.options.fbq, {
-                    external_Id: document.documentElement.getAttribute('data-whitebox-fingerprint')
+                    external_Id: connect.runtime.fingerprint
                 })
                 window.fbq('track', 'PageView', {}, {
                     eventID: eventId
