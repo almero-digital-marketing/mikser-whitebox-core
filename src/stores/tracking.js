@@ -129,7 +129,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })
                 await trackServerSide({
                     event: 'PageView',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -161,7 +160,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     window.fbq('trackCustom', event, context, { eventID: eventId })
                     await trackServerSide({
                         event,
-                        application: 'mikser',
                         context,
                         eventId,
                         url: window.location.href,
@@ -209,7 +207,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'AddToCart', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'AddToCart',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -248,7 +245,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'AddToWishlist', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'AddToWishlist',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -274,7 +270,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'CompleteRegistration', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'CompleteRegistration',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -307,7 +302,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Lead', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Lead',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -331,7 +325,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })
                 await trackServerSide({
                     event: 'Contact',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -362,7 +355,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'FindLocation', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'FindLocation',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -387,7 +379,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'InitiateCheckout', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'InitiateCheckout',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -413,7 +404,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Purchase', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Purchase',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -434,7 +424,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Schedule', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Schedule',
-                    application: 'mikser',
                     eventId,
                     context,
                     url: window.location.href,
@@ -460,7 +449,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Search', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Search',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -492,7 +480,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'StartTrial', context, { eventID: eventID })
                 await trackServerSide({
                     event: 'StartTrial',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -524,7 +511,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Subscribe', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'Subscribe',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -558,7 +544,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'ViewContent', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'ViewContent',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
@@ -590,7 +575,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'CustomizeProduct', context, { eventID: eventId })
                 await trackServerSide({
                     event: 'CustomizeProduct',
-                    application: 'mikser',
                     context,
                     eventId,
                     url: window.location.href,
