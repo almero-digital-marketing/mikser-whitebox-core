@@ -75,6 +75,7 @@ async function trackServerSide(data) {
     if (!window.whitebox) return
     const { connect } = window.whitebox.services
     if (connect.runtime.sst) {
+        data.timestamp = Date.now()
         await axios.post(`${connect.runtime.url}/track`, data, {
             headers: {
                 'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
