@@ -3,6 +3,22 @@ import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 axios.defaults.withCredentials = true
 
+const sha256 = val => {
+    if (typeof val == 'object') {
+        val = JSON.stringify(val)
+    }
+    return crypto.subtle
+    .digest('SHA-256', new TextEncoder('utf-8').encode(val))
+    .then(h => {
+        let hexes = [],
+        view = new DataView(h)
+        for (let i = 0; i < view.byteLength; i += 4) {
+            hexes.push(('00000000' + view.getUint32(i).toString(16)).slice(-8));
+        }
+        return hexes.join('')
+    })
+}
+
 function getFbp() {
     let result = /_fbp=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie)
     if (!(result && result[1])) return null
@@ -71,35 +87,6 @@ function items2fbq(items) {
     }
 }
 
-async function trackServerSide(data) {
-    if (!window.whitebox) return
-    const { connect } = window.whitebox.services
-    if (connect.runtime.sst) {
-        data.timestamp = Date.now()
-        await axios.post(`${connect.runtime.url}/track`, data, {
-            headers: {
-                'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
-                'Fingerprint': connect.runtime.fingerprint,
-            }
-        })
-    }         
-}
-
-async function trackContext(data) {  
-    window.whitebox?.init('analytics', analytics => {
-        if (analytics) {
-            const { analytics } = window.whitebox.services
-            data.vaultId = analytics.runtime.vaultId
-           
-            axios.post(`${analytics.runtime.url}/context`, data, {
-                headers: {
-                    'Authorization': 'Bearer ' + analytics.runtime.token,
-                    'Fingerprint': analytics.runtime.fingerprint,
-                }
-            })
-        }
-    })
-}
 
 export const useWhiteboxTracking = defineStore('whitebox-tracking', {
     state: () => {
@@ -109,9 +96,42 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
         }
     },
     actions: {
-        async identity(identities) {
+        trackServerSide(data = {}) {         
+            const { connect } = window.whitebox.services
+            data.timestamp = Date.now()
+            data.identities = { 
+                ...this.identities, 
+                userId: localStorage.getItem('whiteboxUserId') || connect.runtime.fingerprint 
+            }
+            if (connect.runtime.sst) {
+                axios.post(`${connect.runtime.url}/track`, data, {
+                    headers: {
+                        'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
+                        'Fingerprint': connect.runtime.fingerprint,
+                    }
+                }).catch(console.error)
+            }  
+        },
+        trackContext(data = {}) {  
+            window.whitebox?.init('analytics', analytics => {
+                if (analytics) {
+                    const { analytics } = window.whitebox.services
+                    data.vaultId = analytics.runtime.vaultId
+                   
+                    axios.post(`${analytics.runtime.url}/context`, data, {
+                        headers: {
+                            'Authorization': 'Bearer ' + analytics.runtime.token,
+                            'Fingerprint': analytics.runtime.fingerprint,
+                        }
+                    }).catch(console.error)
+                }
+            })
+        },
+        async identity(identities, userName = 'email') {
             if (!window.whitebox) return
             const { connect } = window.whitebox.services
+            let userId = connect.runtime.fingerprint
+            
             return axios.post(`${connect.runtime.url}/identity`, {
                 identities
             }, {
@@ -133,11 +153,16 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         this.identities.push(identity)
                         diff = true
                     }
+                    const userInfo = this.identities.find(({ name }) => name == userName)?.value
+                    if (userInfo) {
+                        userId = sha256(userInfo)
+                        localStorage.setItem('whiteboxUserId', userId)
+                    }
                 }
                 if (diff) {
                     console.log('Track identity')
                     if (window.fbq) {
-                        const userData = {
+                        window.fbq('init', this.options.fbq, {
                             em: this.identities.find(({ name }) => name == 'email')?.value,
                             ph: this.identities.find(({ name }) => name == 'e164')?.value.replace('+',''),
                             fn: this.identities.find(({ name }) => name == 'firstname')?.value,
@@ -145,10 +170,13 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                             db: this.identities.find(({ name }) => name == 'birthdate')?.value.replace(/\//g, ''),
                             ge: this.identities.find(({ name }) => name == 'gender')?.value,
                             country: this.identities.find(({ name }) => name == 'country')?.value,
-                            external_Id: connect.runtime.fingerprint
-                        }
-                        console.log('User data:', userData)
-                        window.fbq('init', this.options.fbq, userData)
+                            external_id: userId
+                        })
+                    }
+                    if (window.gtag) {
+                        window.gtag('config', this.options.gtag, {
+                            user_id: userId
+                        })
                     }
                 }
             })
@@ -158,6 +186,10 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (options) {
                 this.options = options
             }
+
+            const { connect } = window.whitebox.services
+            let userId = localStorage.getItem('whiteboxUserId') || connect.runtime.fingerprint
+
             if (window.fbq) {
                 const eventId = uuidv4()
                 const context = {}
@@ -171,25 +203,25 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
                 }
 
-                const { connect } = window.whitebox.services
                 window.fbq('init', this.options.fbq, {
-                    external_Id: connect.runtime.fingerprint
+                    external_id: userId
                 })
                 window.fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'PageView',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })            
             }
 
             if (window.gtag) {
-                window.gtag('js', new Date());
-                window.gtag('config', this.options.gtag);    
+                window.gtag('js', new Date())
+                window.gtag('config', this.options.gtag, {
+                    user_id: userId
+                })
             }
 
             const queryString = window.location.search
@@ -210,12 +242,11 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         campaign,
                     }
                     window.fbq('trackCustom', event, context, { eventID: eventId })
-                    await trackServerSide({
+                    await this.trackServerSide({
                         event,
                         context,
                         eventId,
                         url: window.location.href,
-                        identities: this.identities
                     })
                 }
             }
@@ -258,16 +289,15 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 window.fbq('track', 'AddToCart', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'AddToCart',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
 
-            await trackContext({
+            await this.trackContext({
                 action: 'addToCart',
                 context: items,
             })
@@ -279,7 +309,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.gtag('event', 'remove_from_cart', items2gtag(items))
             }
 
-            await trackContext({
+            await this.trackContext({
                 action: 'removeFromCart',
                 context: items,
             })
@@ -296,16 +326,15 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 window.fbq('track', 'AddToWishlist', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'AddToWishlist',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
 
-            await trackContext({
+            await this.trackContext({
                 action: 'addToWishlist',
                 context: items,
             })
@@ -321,15 +350,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = { content_name: method }
                 window.fbq('track', 'CompleteRegistration', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'CompleteRegistration',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'completeRegistration',
                 context: method,
             })
@@ -353,16 +381,15 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     value: info.value,
                 }
                 window.fbq('track', 'Lead', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Lead',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
 
-            await trackContext({
+            await this.trackContext({
                 action: 'lead',
                 context: info,
             })
@@ -376,15 +403,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'Contact', context, {
                     eventID: eventId,
                 })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Contact',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'contact',
                 context: {}
             })
@@ -406,15 +432,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     content_name: location.locationId
                 }
                 window.fbq('track', 'FindLocation', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'FindLocation',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })           
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'findLocation',
                 context: location.locationId,
             })
@@ -430,15 +455,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 window.fbq('track', 'InitiateCheckout', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'InitiateCheckout',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })          
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'initiateCheckout',
                 context: items,
             })
@@ -455,15 +479,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const context = items2fbq(items)
                 context.transaction_id = eventId
                 window.fbq('track', 'Purchase', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Purchase',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'purchase',
                 context: items,
             })
@@ -475,15 +498,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = {}
                 window.fbq('track', 'Schedule', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Schedule',
                     eventId,
                     context,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'contact',
             })
         },
@@ -500,15 +522,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = { search_string: term }
                 window.fbq('track', 'Search', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Search',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'search',
                 context: term,
             })
@@ -531,15 +552,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     predicted_ltv: info.predictedLtv,
                 }
                 window.fbq('track', 'StartTrial', context, { eventID: eventID })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'StartTrial',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'startTrial',
                 context: info,
             })
@@ -562,15 +582,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     predicted_ltv: info.predictedLtv || 0,
                 }
                 window.fbq('track', 'Subscribe', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'Subscribe',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'subscribe',
                 context: info,
             })
@@ -595,15 +614,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     value: info.value,
                 }
                 window.fbq('track', 'ViewContent', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'ViewContent',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'viewContent',
                 context: info,
             })
@@ -614,7 +632,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             if (window.gtag) {
                 window.gtag('event', 'login', { method })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'login',
                 context: method,
             })
@@ -626,15 +644,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = {}
                 window.fbq('track', 'CustomizeProduct', context, { eventID: eventId })
-                await trackServerSide({
+                await this.trackServerSide({
                     event: 'CustomizeProduct',
                     context,
                     eventId,
                     url: window.location.href,
-                    identities: this.identities
                 })
             }
-            await trackContext({
+            await this.trackContext({
                 action: 'subscribe',
                 context: info,
             })

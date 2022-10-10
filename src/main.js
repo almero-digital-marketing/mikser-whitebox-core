@@ -42,6 +42,8 @@ async function main() {
         store: pinia, 
         options: {
             domain: "almero.com",
+            "gtag": "G-JPF7CWHSXQ",
+            "fbq": "616081495752346",        
             context: WHITEBOX_CONTEXT
         }
     })
