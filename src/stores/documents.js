@@ -206,7 +206,9 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                     data.query = item
                                 }
                                 data.context = dataContext
-                                data.query.context = queryContext
+                                data.query.context = { 
+                                    $in: queryContext 
+                                }
                                 data.vault = 'feed'
                                 
                                 loading.push(
@@ -230,13 +232,14 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                             cache: '1h',
                             context: dataContext,
                             query: {
-                                context: queryContext,
+                                context: { 
+                                    $in: queryContext 
+                                },
                                 refId: {
                                     $in: refIds,
                                 },
                             },
                         }
-                        
                         loading.push(
                             feed.service.catalogs.mikser
                             .find(data)
@@ -252,7 +255,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
         },
         liveReload(initial) {
             if (!window.whitebox) return
-            const { context } = useWhitebox()
+            const { context, shared } = useWhitebox()
             window.whitebox.init('feed', (feed) => {
                 window.whitebox.emmiter.on('feed.change', (change) => {
                     if (change.type != 'ready') console.log('Feed change', change)
@@ -263,6 +266,10 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                 if (queryContext != context) {
                     dataContext = context
                     queryContext = queryContext + '_' + dataContext
+                }
+                if (shared) {
+                    queryContext = [queryContext, shared]
+                    dataContext = dataContext ? [dataContext, shared] : dataContext
                 }
 
                 feed.service.catalogs.mikser.changes({ 

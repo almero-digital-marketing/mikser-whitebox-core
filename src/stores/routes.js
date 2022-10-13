@@ -84,7 +84,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			
             return new Promise((resolve, reject) => {
 				if (!window.whitebox) return resolve([])
-				const { context } = useWhitebox()
+				const { context, shared } = useWhitebox()
 				window.whitebox.init('feed', (feed) => {
 					let data = {
 						vault: 'feed',
@@ -95,6 +95,12 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 					if (context != 'mikser') {
 						data.context = context
 						data.query.context = data.query.context + '_' + data.context
+					}
+					if (shared) {
+						data.context = data.context ? [data.context, shared] : data.context
+						data.query.context = { 
+							$in: [data.query.context, shared] 
+						}
 					}
 					if (feed.service.catalogs.mikser) {
 						feed.service.catalogs.mikser

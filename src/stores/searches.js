@@ -63,6 +63,7 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
                         },
                         ...options
                     }
+
                     feed.service.catalogs.mikser
                     .search(data)
                     .then((documents) => {

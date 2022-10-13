@@ -9,8 +9,9 @@ import { onDocumentChanged } from './hooks'
 import navigation from './navigation'
 
 export async function createMikser({ router, store, options }) {
-	const whitebox = useWhitebox(store)
-	whitebox.context = options.context
+	const whiteboxStore = useWhitebox(store)
+	whiteboxStore.context = options.context
+	whiteboxStore.shared = options.shared ? 'shared' : ''
 
 	const routesStore = useWhiteboxRoutes(store)
 	let routeDefinitions = {}
@@ -48,6 +49,12 @@ export async function createMikser({ router, store, options }) {
 				get() {
 					const filesStore = useWhiteboxFiles()
 					return filesStore.storage
+				}
+			})
+			Object.defineProperty(app.config.globalProperties, '$sharedStorage', {
+				get() {
+					const filesStore = useWhiteboxFiles()
+					return filesStore.sharedStorage
 				}
 			})
 			Object.defineProperty(app.config.globalProperties, '$collections', {

@@ -20,18 +20,19 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
 			}
 			return this.filemap[file] || ''
         },
-        link(file) {
-            const { context } = useWhitebox()
+        link(file, context) {
+            const whiteboxStore = useWhitebox()
             window.whitebox.init('storage', (storage) => {
                 if (storage) {
                     let data = {
                         file,
+                        cache: context == 'mikser'
                     }
-                    if (context != 'mikser') {
+                    if (whiteboxStore.context != 'mikser') {
+                        data.context = whiteboxStore.context
+                    }
+                    if (context) {
                         data.context = context
-                        data.cache = false
-                    } else {
-                        data.cache = true
                     }
                     let result = storage.service.link(data)
                     if (typeof result == 'string') {
@@ -43,6 +44,20 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
                     }
                 }
             })
+        },
+        sharedStorage(file) {
+            if(!file) return file
+			if (file.indexOf('/storage') != 0 && file.indexOf('storage') != 0) {
+                if (file[0] == '/') file = '/storage' + file
+				else file = '/storage/' + file
+			}
+
+			if (!this.filemap[file]) {
+                const { shared } = useWhitebox(store)
+				this.link(file, shared)
+			}
+			return this.filemap[file] || ''
         }
+
     }
 })

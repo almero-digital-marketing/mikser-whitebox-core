@@ -44,7 +44,8 @@ async function main() {
             domain: "almero.com",
             "gtag": "G-JPF7CWHSXQ",
             "fbq": "616081495752346",        
-            context: WHITEBOX_CONTEXT
+            context: WHITEBOX_CONTEXT,
+            shared: true
         }
     })
     
