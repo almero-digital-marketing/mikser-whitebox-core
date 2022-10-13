@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 axios.defaults.withCredentials = true
 
-const sha256 = val => {
+function sha256(val) {
     if (typeof val == 'object') {
         val = JSON.stringify(val)
     }
@@ -17,6 +17,26 @@ const sha256 = val => {
         }
         return hexes.join('')
     })
+}
+
+function removeUndefined(obj, mutate = false, recursive = 0) {
+	const returnObj = {}
+	Object.entries(obj).forEach(([key, val]) => {
+		if(val === undefined) {
+			if (mutate) {
+				delete obj[key]
+			}
+		} else {
+      let recursiveVal
+      if (recursive > 0 && val !== null && typeof val === 'object') {
+        recursiveVal = removeUndefined(val, mutate, typeof recursive === 'number' ? (recursive - 1) : true )
+      }
+      if (!mutate) {
+        returnObj[key] = recursiveVal || val
+      }
+    }
+	})
+	return mutate ? obj : returnObj
 }
 
 function getFbp() {
@@ -162,7 +182,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 if (diff) {
                     console.log('Track identity')
                     if (window.fbq) {
-                        window.fbq('init', this.options.fbq, {
+                        window.fbq('init', this.options.fbq, removeUndefined({
                             em: this.identities.find(({ name }) => name == 'email')?.value,
                             ph: this.identities.find(({ name }) => name == 'e164')?.value.replace('+',''),
                             fn: this.identities.find(({ name }) => name == 'firstname')?.value,
@@ -171,12 +191,33 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                             ge: this.identities.find(({ name }) => name == 'gender')?.value,
                             country: this.identities.find(({ name }) => name == 'country')?.value,
                             external_id: userId
-                        })
+                        }))
                     }
                     if (window.gtag) {
-                        window.gtag('config', this.options.gtag, {
-                            user_id: userId
-                        })
+                        if (Array.isArray(this.options.gtag)) {
+                            for(let tagId of this.options.gtag) {
+                                window.gtag('config', tagId, {
+                                    user_id: userId
+                                })
+                            }
+                        } else {
+                            window.gtag('config', this.options.gtag, {
+                                user_id: userId
+                            })
+                        }
+                        window.gtag('set', 'user_data', removeUndefined({
+                            email: this.identities.find(({ name }) => name == 'email')?.value,
+                            phone_number: this.identities.find(({ name }) => name == 'e164')?.value,
+                            address: {
+                                first_name: this.identities.find(({ name }) => name == 'firstname')?.value,
+                                last_name: this.identities.find(({ name }) => name == 'lastname')?.value,
+                                city: this.identities.find(({ name }) => name == 'city')?.value,
+                                country: this.identities.find(({ name }) => name == 'country')?.value,
+                                region: this.identities.find(({ name }) => name == 'region')?.value,
+                                street: this.identities.find(({ name }) => name == 'street')?.value,
+                                postal_code: this.identities.find(({ name }) => name == 'postalcode')?.value,
+                            }
+                        }, false, 1))
                     }
                 }
             })
@@ -219,9 +260,17 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
 
             if (window.gtag) {
                 window.gtag('js', new Date())
-                window.gtag('config', this.options.gtag, {
-                    user_id: userId
-                })
+                if (Array.isArray(this.options.gtag)) {
+                    for(let tagId of this.options.gtag) {
+                        window.gtag('config', tagId, {
+                            user_id: userId
+                        })
+                    }
+                } else {
+                    window.gtag('config', this.options.gtag, {
+                        user_id: userId
+                    })
+                }
             }
 
             const queryString = window.location.search
