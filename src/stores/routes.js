@@ -84,29 +84,24 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			
             return new Promise((resolve, reject) => {
 				if (!window.whitebox) return resolve([])
-				const { context, shared } = useWhitebox()
+				const { dataContext, queryContext } = useWhitebox()
 				window.whitebox.init('feed', (feed) => {
 					let data = {
+						context: dataContext,
 						vault: 'feed',
-						query: { context: 'mikser' },
+						query: { 
+							context: {
+								$in: queryContext 
+							}
+						},
 						projection: this.projection,
 						cache: '1h',
-					}
-					if (context != 'mikser') {
-						data.context = context
-						data.query.context = data.query.context + '_' + data.context
-					}
-					if (shared) {
-						data.context = data.context ? [data.context, shared] : data.context
-						data.query.context = { 
-							$in: [data.query.context, shared] 
-						}
 					}
 					if (feed.service.catalogs.mikser) {
 						feed.service.catalogs.mikser
 						.find(data)
 						.then((documents) => {
-							console.log('Context:', context, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents.length)
+							console.log('Context:', dataContext, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents.length)
 							let routes = []
 							for (let document of documents) {
 								const routeDefinition = routeDefinitions[document.data.meta.layout]

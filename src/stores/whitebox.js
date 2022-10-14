@@ -9,18 +9,14 @@ export const useWhitebox = defineStore('whitebox', {
     },
     getters: {
         queryContext() {
-            if (this.context != 'mikser') {
-                if (this.shared) return ['mikser_' + this.context, this.shared]
-                return ['mikser_' + this.context]
-            }
-            if (this.shared) return ['mikser', this.shared]
-            return ['mikser']
+            return this.dataContext.map(context => {
+                if (context == 'mikser') return context
+                return 'mikser_' + context
+            })
         },
         dataContext() {
-            if (this.context != 'mikser') {
-                if (this.shared) return [this.context, this.shared]
-                return [this.context]
-            }
+            if (this.shared) return [this.context || 'mikser', this.shared]
+            return [this.context || 'mikser']
         }
     }
 })

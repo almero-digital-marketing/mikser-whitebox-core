@@ -40,7 +40,7 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
             }], options)
         },
         search(name, queries, options = {}) {
-            const { queryContext, dataContext } = useWhitebox()
+            const { dataContext, queryContext } = useWhitebox()
             return new Promise(resolve => {
                 this.searchMap[name] = []
                 this.searchMap[name].loaded = false

@@ -37,7 +37,7 @@ documents.loadDocuments(['/web/translation'])
 
 import { onDocumentChanged, onCollectionLoaded } from './lib/hooks'
 onDocumentChanged((newValue, oldValue) => console.log('Document changed:', oldValue, '→', newValue))
-onCollectionLoaded('items', console.log)
+onCollectionLoaded('items', (items) => console.log('Collection loaded:', items))
 
 function search() {
   const searches = useWhiteboxSearches()

@@ -701,7 +701,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })
             }
             await this.trackContext({
-                action: 'subscribe',
+                action: 'customizeProduct',
                 context: info,
             })
         },

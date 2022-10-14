@@ -157,7 +157,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             if (!items) items = []
             const result = []
             const routesStore = useWhiteboxRoutes()
-            const { queryContext, dataContext } = useWhitebox()
+            const { dataContext, queryContext } = useWhitebox()
             return new Promise(resolve => {
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
@@ -255,31 +255,24 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
         },
         liveReload(initial) {
             if (!window.whitebox) return
-            const { context, shared } = useWhitebox()
+            const { dataContext, queryContext } = useWhitebox()
             window.whitebox.init('feed', (feed) => {
                 window.whitebox.emmiter.on('feed.change', (change) => {
-                    if (change.type != 'ready') console.log('Feed change', change)
+                    if (change.type != 'ready') console.log('Feed change:', change)
                     this.updateDocuments(change)
                 })
-                let dataContext
-                let queryContext = 'mikser'
-                if (queryContext != context) {
-                    dataContext = context
-                    queryContext = queryContext + '_' + dataContext
-                }
-                if (shared) {
-                    queryContext = [queryContext, shared]
-                    dataContext = dataContext ? [dataContext, shared] : dataContext
-                }
-
-                feed.service.catalogs.mikser.changes({ 
+                let data = { 
                     vault: 'feed', 
                     context: dataContext,
-                    query: { 
-                        context: queryContext
-                    },
+                    query: queryContext.reduce((query, context) => {
+                        if (!query) {
+                            return `item("context").eq("${ context }")`
+                        }
+                        return query += `.or(item("context").eq("${ context }"))`
+                    }, ''),
                     initial
-                })
+                }
+                feed.service.catalogs.mikser.changes(data)
             })
         }
     }
