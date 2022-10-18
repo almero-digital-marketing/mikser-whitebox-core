@@ -20,26 +20,26 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
     },
     actions: {
         match(name, query, options) {
-            return this.search(name, [{
+            return this.search(name, {
                 match: query
-            }], options)
+            }, options)
         },
         multiMatch(name, query, options) {
-            return this.search(name, [{
+            return this.search(name, {
                 multi_match: query
-            }], options)
+            }, options)
         },
         combinedFields(name, query, options) {
-            return this.search(name, [{
+            return this.search(name, {
                 combined_fields: query
-            }], options)
+            }, options)
         },
         queryString(name, query, options) {
-            return this.search(name, [{
+            return this.search(name, {
                 query_string: query
-            }], options)
+            }, options)
         },
-        search(name, queries, options = {}) {
+        search(name, query, options = {}) {
             const { dataContext, queryContext } = useWhitebox()
             return new Promise(resolve => {
                 this.searchMap[name] = []
@@ -51,14 +51,12 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
                         vault: 'feed',
                         query: {
                             bool: {
-                                must: [
-                                    { 
-                                        term: { 
-                                            'context.keyword': queryContext 
-                                        } 
-                                    },
-                                    ...queries
-                                ],
+                                filter: {                               
+                                    terms: { 
+                                        'context.keyword': queryContext 
+                                    } 
+                                },
+                                must: query,
                             }
                         },
                         ...options
