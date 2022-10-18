@@ -21,22 +21,30 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
     actions: {
         match(name, query, options) {
             return this.search(name, {
-                match: query
+                must: {
+                    match: query
+                }
             }, options)
         },
         multiMatch(name, query, options) {
             return this.search(name, {
-                multi_match: query
+                must: {
+                    multi_match: query
+                }
             }, options)
         },
         combinedFields(name, query, options) {
             return this.search(name, {
-                combined_fields: query
+                must: {
+                    combined_fields: query
+                }
             }, options)
         },
         queryString(name, query, options) {
             return this.search(name, {
-                query_string: query
+                must: {
+                    query_string: query
+                }
             }, options)
         },
         search(name, query, options = {}) {
@@ -56,7 +64,7 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
                                         'context.keyword': queryContext 
                                     } 
                                 },
-                                must: query,
+                                ...query,
                             }
                         },
                         ...options
