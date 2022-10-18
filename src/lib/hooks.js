@@ -1,14 +1,12 @@
 import { useWhiteboxRoutes } from "../stores/routes"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { watch } from 'vue'
+import { storeToRefs } from 'pinia'
 
 function onDocumentChanged(callback) {
     const routesStore = useWhiteboxRoutes()
-    routesStore.$subscribe(({ events }) => {
-        if (events?.key == 'currentRefId') {
-            callback(events.newValue, events.oldValue)
-        }
-    })
+    const { currentRefId } = storeToRefs(routesStore)
+    watch(currentRefId, callback)
 }
 
 function onCollectionLoaded(collection, callback) {
