@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
+import { version } from '../../package.json'
 axios.defaults.withCredentials = true
 
 function sha256(val) {
@@ -17,6 +18,10 @@ function sha256(val) {
         }
         return hexes.join('')
     })
+}
+
+function localKey(key) {
+    return key + '@' + version.split('.')[0]
 }
 
 function removeUndefined(obj, mutate = false, recursive = 0) {
@@ -119,10 +124,14 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
         trackServerSide(data = {}) {         
             const { connect } = window.whitebox.services
             data.timestamp = Date.now()
-            data.identities = { 
+            data.identities = [ 
                 ...this.identities, 
-                userId: localStorage.getItem('whiteboxUserId') || connect.runtime.fingerprint 
-            }
+                { 
+                    id: "fingerprint",
+                    name: "userId", 
+                    value: localStorage.getItem(localKey('whiteboxUserId')) || connect.runtime.fingerprint 
+                }
+            ]
             if (connect.runtime.sst) {
                 axios.post(`${connect.runtime.url}/track`, data, {
                     headers: {
@@ -160,7 +169,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     'Fingerprint': connect.runtime.fingerprint,
                 }
             })
-            .then((response) => {
+            .then(async (response) => {
                 let diff = false
                 const currentIdentities = [...this.identities]
                 console.log('Current identities:', currentIdentities)
@@ -175,8 +184,8 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     }
                     const userInfo = this.identities.find(({ name }) => name == userName)?.value
                     if (userInfo) {
-                        userId = sha256(userInfo)
-                        localStorage.setItem('whiteboxUserId', userId)
+                        userId = await sha256(userInfo)
+                        localStorage.setItem(localKey('whiteboxUserId'), userId)
                     }
                 }
                 if (diff) {
@@ -229,7 +238,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             }
 
             const { connect } = window.whitebox.services
-            let userId = localStorage.getItem('whiteboxUserId') || connect.runtime.fingerprint
+            let userId = localStorage.getItem(localKey('whiteboxUserId')) || connect.runtime.fingerprint
 
             if (window.fbq) {
                 const eventId = uuidv4()
