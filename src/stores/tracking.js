@@ -121,19 +121,20 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
         }
     },
     actions: {
-        trackServerSide(data = {}) {         
+        async trackServerSide(data = {}) {         
             const { connect } = window.whitebox.services
+            let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
             data.timestamp = Date.now()
             data.identities = [ 
                 ...this.identities, 
                 { 
                     id: "fingerprint",
                     name: "userId", 
-                    value: localStorage.getItem(localKey('whiteboxUserId')) || connect.runtime.fingerprint 
+                    value: userId
                 }
             ]
             if (connect.runtime.sst) {
-                axios.post(`${connect.runtime.url}/track`, data, {
+                return axios.post(`${connect.runtime.url}/track`, data, {
                     headers: {
                         'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
                         'Fingerprint': connect.runtime.fingerprint,
@@ -159,7 +160,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
         async identity(identities, userName = 'email') {
             if (!window.whitebox) return
             const { connect } = window.whitebox.services
-            let userId = connect.runtime.fingerprint
+            let userId = await sha256(connect.runtime.fingerprint)
             
             return axios.post(`${connect.runtime.url}/identity`, {
                 identities
@@ -238,7 +239,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             }
 
             const { connect } = window.whitebox.services
-            let userId = localStorage.getItem(localKey('whiteboxUserId')) || connect.runtime.fingerprint
+            let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
 
             if (window.fbq) {
                 const eventId = uuidv4()
@@ -259,7 +260,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
-                await this.trackServerSide({
+                await this.async ({
                     event: 'PageView',
                     context,
                     eventId,
@@ -300,7 +301,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         campaign,
                     }
                     window.fbq('trackCustom', event, context, { eventID: eventId })
-                    await this.trackServerSide({
+                    await this.async ({
                         event,
                         context,
                         eventId,
@@ -347,7 +348,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 window.fbq('track', 'AddToCart', context, { eventID: eventId })
-                await this.trackServerSide({
+                await this.async ({
                     event: 'AddToCart',
                     eventId,
                     context,
