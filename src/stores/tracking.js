@@ -453,12 +453,21 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: info,
             })
         },
-        async contact(identities) {           
+        async contact(info) {           
             console.log('Track contact')
                     
+            if (window.gtag) {
+                window.gtag('event', 'contact', {
+                    event_label: info.name,
+                    event_category: info.category,
+                })
+            }
             if (window.fbq) {
                 const eventId = uuidv4()
-                const context = {}
+                const context = {
+                    content_name: info.name,
+                    content_category: info.category,
+                }
                 window.fbq('track', 'Contact', context, {
                     eventID: eventId,
                 })
@@ -471,7 +480,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             }
             await this.trackContext({
                 action: 'contact',
-                context: {}
+                context: info
             })
         },
         async findLocation(location) {
@@ -565,7 +574,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 })
             }
             await this.trackContext({
-                action: 'contact',
+                action: 'schedule',
             })
         },
         async search(term) {
