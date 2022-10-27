@@ -8,6 +8,7 @@ function sha256(val) {
     if (typeof val == 'object') {
         val = JSON.stringify(val)
     }
+    if (!crypto.subtle) return val
     return crypto.subtle
     .digest('SHA-256', new TextEncoder('utf-8').encode(val))
     .then(h => {
