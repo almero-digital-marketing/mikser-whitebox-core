@@ -53,15 +53,16 @@ function getFbp() {
 function getFbc() {
     let result = /_fbc=(fb\.1\.\d+\.\d+)/.exec(window.document.cookie);
     if (!(result && result[1])) {
-        if(window.location.search.includes('fbclid=')){
+        if(window.location.search.includes('fbclid=')) {
             const queryString = window.location.search
             const urlParams = new URLSearchParams(queryString)
             fbc = 'fb.1.'+ (+new Date()) +'.'+ urlParams.get('fbclid')
+            return fbc
         } else {
             return null
         }
     }
-    return result[1];
+    return result[1]
 }
 
 function items2gtag(items) {
@@ -248,10 +249,12 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const fbp = getFbp()
                 if (fbp) {
                     this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
+                    console.log('Fbp:', fbp)
                 }
                 const fbc = getFbc()
                 if (fbc) {
                     this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
+                    console.log('Fbc:', fbp)
                 }
 
                 window.fbq('init', this.options.fbq, {
@@ -260,7 +263,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq('track', 'PageView', {}, {
                     eventID: eventId
                 })
-                await this.async ({
+                await this.trackServerSide({
                     event: 'PageView',
                     context,
                     eventId,
@@ -301,7 +304,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                         campaign,
                     }
                     window.fbq('trackCustom', event, context, { eventID: eventId })
-                    await this.async ({
+                    await this.trackServerSide({
                         event,
                         context,
                         eventId,
@@ -348,7 +351,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 const eventId = uuidv4()
                 const context = items2fbq(items)
                 window.fbq('track', 'AddToCart', context, { eventID: eventId })
-                await this.async ({
+                await this.trackServerSide({
                     event: 'AddToCart',
                     eventId,
                     context,
