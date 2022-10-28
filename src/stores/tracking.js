@@ -261,17 +261,18 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             const { connect } = window.whitebox.services
             let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
 
+            const fbp = getFbp()
+            if (fbp) {
+                this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
+                console.log('Fbp:', fbp)
+            }
+            const fbc = getFbc()
+            if (fbc) {
+                this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
+                console.log('Fbc:', fbp)
+            }
+            
             if (window.fbq) {
-                const fbp = getFbp()
-                if (fbp) {
-                    this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
-                    console.log('Fbp:', fbp)
-                }
-                const fbc = getFbc()
-                if (fbc) {
-                    this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
-                    console.log('Fbc:', fbp)
-                }
                 window.fbq('init', this.options.fbq, {
                     external_id: userId
                 })          
