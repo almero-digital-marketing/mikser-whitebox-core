@@ -89,7 +89,8 @@ export async function createMikser({ router, store, options }) {
 						startTrial: tracking.startTrial,
 						subscribe: tracking.subscribe,
 						viewContent: tracking.viewContent,
-						customizeProduct: tracking.customizeProduct
+						customizeProduct: tracking.customizeProduct,
+						watch: tracking.watch
 					}
 				}
 			})
@@ -101,6 +102,7 @@ export async function createMikser({ router, store, options }) {
 			tracking.options = options
 			onDocumentChanged(() => {
 				tracking.pageView()
+				tracking.session()
 			})
 		}
 	}

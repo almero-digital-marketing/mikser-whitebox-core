@@ -318,6 +318,8 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     }
                 }
             })
+
+            this.session()
         },
         custom(action, data) {
             window.whitebox?.services?.analytics?.context(action, data) 
@@ -583,5 +585,51 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: info,
             })
         },
+        async session() {
+            let pages = (Number(localStorage.getItem('whiteboxPages')) || 0) + 1
+            let last = new Date(Number(localStorage.getItem('whiteboxLastVisit')) || Date.now())
+            let sessions = (Number(localStorage.getItem('whiteboxSessions')) || 1)
+
+            if (last - Date.now() > 3 * 60 * 1000) {
+                sessions++
+            }
+            if (pages > 1) {
+                console.log('Track session:', sessions, pages)
+                await this.trackFacebook('trackCustom', 'Session', {
+                    pages,
+                    sessions
+                })
+            }
+
+            localStorage.setItem('whiteboxPages', pages)
+            localStorage.setItem('whiteboxLastVisit', Date.now())
+            localStorage.setItem('whiteboxSessions', sessions)
+        },
+        async watch(info = {}) {
+            console.log('Track watch:', info.percent, info.current, info.total)
+            
+            if (window.gtag) {
+                window.gtag('event', 'watch', { 
+                    content_type: info.category,
+                    item_id: info.contentId,
+                    percent: info.percent,
+                    current: info.current,
+                    total: info.total
+                })
+            }
+            
+            await this.trackFacebook('trackCustom', 'Watch', {
+                content_ids: [info.contentId],
+                content_name: info.name,
+                content_category: info.category,
+                percent: info.percent,
+                current: info.current,
+                total: info.total
+            })
+            await this.trackContext({
+                action: 'watch',
+                context: info,
+            })
+        }
     }
 })
