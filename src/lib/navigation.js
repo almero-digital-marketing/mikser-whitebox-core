@@ -37,10 +37,10 @@ export default {
             .catch(err => next(err))
         })
         
-        router.afterEach(() => {
+        router.afterEach((to, from) => {
             const routesStore = useWhiteboxRoutes()
             routesStore.currentRefId = router.currentRoute.value.refId || decodeURI(router.currentRoute.value.path)
-            routesStore.loadRoute(routesStore.currentRefId).catch(console.error)
+            routesStore.loadRoute(routesStore.currentRefId, to, from).catch(console.error)
         })
     }
 }

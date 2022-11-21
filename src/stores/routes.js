@@ -42,7 +42,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 		}
 	},
     actions: {
-		async loadRoute(refId) {
+		async loadRoute(refId, to, from) {
 			const documentsStore = useWhiteboxDocuments()
 			const loadDocuments = []
 			const documentRoute = this.documentRoutes[refId]
@@ -51,7 +51,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 				let collection = await documentRoute.collections[name].query({
 					meta: document.data.meta,
 					link: encodeURI(document.refId),
-				})
+				}, to, from)
 				if (collection) {
 					if (!Array.isArray(collection)) {
 						collection = [collection]
