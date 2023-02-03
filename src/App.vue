@@ -25,6 +25,7 @@ import { useWhiteboxDocuments } from "./stores/documents"
 import { useWhiteboxSearches } from "./stores/searches"
 import { metaField } from './lib/utils'
 import { useWhiteboxTracking } from "./stores/tracking"
+import { useWhiteboxPassports } from "./stores/passports"
 
 let count = ref(0)
 let query = ref('') 
@@ -61,6 +62,9 @@ function search() {
 onMounted(() => {
   const tracking = useWhiteboxTracking()
   tracking.start()
+
+  const passports = useWhiteboxPassports()
+  passports.start()
 })
 
 </script>

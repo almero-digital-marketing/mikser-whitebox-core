@@ -1,21 +1,21 @@
-const vue = require('@vitejs/plugin-vue')
-const html = require('vite-plugin-html').createHtmlPlugin
-const os = require('os')
-const { machineIdSync } = require('node-machine-id')
-const path = require('path')
-const visualizer = require('rollup-plugin-visualizer').visualizer
-const fs = require('fs/promises')
+import vue from '@vitejs/plugin-vue'
+import mikser from 'vite-plugin-mikser'
+import { createHtmlPlugin as html } from 'vite-plugin-html'
+import os from 'os'
+import MID from 'node-machine-id'
+import path from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
 
-module.exports = (options, domainConfig) => {
-    const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
+export default (options, domainConfig) => {
+    const machineId = MID.machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
 
     const constants = options.mode == 'development' ? {
         WHITEBOX_DOMAIN: domainConfig.domain,
         WHITEBOX_CONTEXT: machineId,
         ...options.environment,
     } : {
-        WHITEBOX_DOMAIN: domainConfig.domain,
         WHITEBOX_CONTEXT: 'web',
+        WHITEBOX_DOMAIN: domainConfig.domain,
         ...options.environment,
     }
     const define = {}
@@ -25,9 +25,9 @@ module.exports = (options, domainConfig) => {
     }
 
     return {
-        publicDir: options.mode == 'development' ? '../out' : path.join(options.mikserFolder || '../mikser', 'files'),
         define,
         plugins: [
+            mikser(),
             vue(),
             html({
                 inject: {
@@ -49,7 +49,6 @@ module.exports = (options, domainConfig) => {
             }
         ],
         build: {
-            outDir: '../out',
             sourcemap: options.mode == 'development',
             rollupOptions: {
                 plugins: [
@@ -57,13 +56,7 @@ module.exports = (options, domainConfig) => {
                         return { 
                             filename: 'runtime/stats.html' 
                         }
-                    }),
-                    {
-                        name: 'layout-template',
-                        writeBundle: (options) => {
-                            return fs.rename(path.join(options.dir, 'index.html'), path.join(options.dir, 'template.html'))
-                        }
-                    }
+                    })
                 ],
                 output: {
                     manualChunks: id => {

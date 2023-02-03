@@ -14,7 +14,7 @@ module.exports = (options, domainConfig) => {
             WHITEBOX_DOMAIN: JSON.stringify('almero.com'),
             WHITEBOX_CONTEXT: JSON.stringify(machineId),
         } : {
-            WHITEBOX_DOMAIN: JSON.stringify(''),
+            WHITEBOX_DOMAIN: JSON.stringify('web'),
             WHITEBOX_CONTEXT: JSON.stringify('mikser'),
         },
         plugins: [

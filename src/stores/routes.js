@@ -74,12 +74,11 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			Object.assign(this.documentRoutes, documentRoutes)
             Object.assign(this.reverseRoutes, reverseRoutes)
             this.projection = Object.assign({}, projection, {
-				'data.meta.layout': 1,
 				'refId': 1,
 				'data.meta.href': 1,
 				'data.meta.route': 1,
 				'data.meta.lang': 1,
-				'data.meta.type': 1, 
+				'data.meta.component': 1,
 			})
 			
             return new Promise((resolve, reject) => {
@@ -101,10 +100,10 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 						feed.service.catalogs.mikser
 						.find(data)
 						.then((documents) => {
-							console.log('Context:', dataContext, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents.length)
+							console.log('Context:', dataContext, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents)
 							let routes = []
 							for (let document of documents) {
-								const routeDefinition = routeDefinitions[document.data.meta.layout]
+								const routeDefinition = routeDefinitions[document.data.meta.component]
 								
 								this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
 								this.reverseRoutes[document.data.meta.href].push({ 

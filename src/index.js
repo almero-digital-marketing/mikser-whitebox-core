@@ -6,6 +6,8 @@ import { useWhiteboxRoutes } from './stores/routes'
 import { useWhiteboxSearches } from './stores/searches'
 import { feedType, metaField } from './lib/utils'
 import { useWhiteboxTracking } from './stores/tracking'
+import { useWhiteboxPassports } from './stores/passports'
+
 export {
     createMikser,
     useWhiteboxFiles,
@@ -16,6 +18,7 @@ export {
     onVersionChanged,
     useWhiteboxSearches,
     useWhiteboxTracking,
+    useWhiteboxPassports,
     feedType, 
     metaField,
 }
