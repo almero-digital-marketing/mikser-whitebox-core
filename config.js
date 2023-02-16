@@ -15,7 +15,7 @@ module.exports = (options, domainConfig) => {
         ...options.environment,
     } : {
         WHITEBOX_DOMAIN: domainConfig.domain,
-        WHITEBOX_CONTEXT: 'web',
+        WHITEBOX_CONTEXT: 'mikser',
         ...options.environment,
     }
     const define = {}

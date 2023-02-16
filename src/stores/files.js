@@ -20,6 +20,16 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
 			}
 			return this.filemap[file] || ''
         },
+        asset(preset, file, format) {
+            if(!file) return file
+
+            let asset = `/storage/assets/${preset}${format ? file.split('.').slice(0, -1).concat(format).join('.') : file}`
+
+			if (!this.filemap[asset]) { 
+				this.link(asset)
+			}
+			return this.filemap[asset] || ''
+        },
         link(file, context) {
             const whiteboxStore = useWhitebox()
             window.whitebox.init('storage', (storage) => {

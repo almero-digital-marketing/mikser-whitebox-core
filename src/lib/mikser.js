@@ -51,6 +51,12 @@ export async function createMikser({ router, store, options }) {
 					return filesStore.storage
 				}
 			})
+			Object.defineProperty(app.config.globalProperties, '$asset', {
+				get() {
+					const filesStore = useWhiteboxFiles()
+					return filesStore.asset
+				}
+			})
 			Object.defineProperty(app.config.globalProperties, '$sharedStorage', {
 				get() {
 					const filesStore = useWhiteboxFiles()
