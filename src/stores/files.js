@@ -8,7 +8,7 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
         }
     },
     actions: {
-        storage(file) {
+        storage(file, cache) {
             if(!file) return file
 			if (file.indexOf('/storage') != 0 && file.indexOf('storage') != 0) {
                 if (file[0] == '/') file = '/storage' + file
@@ -16,27 +16,27 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
 			}
 
 			if (!this.filemap[file]) { 
-				this.link(file)
+				this.link(file, cache)
 			}
 			return this.filemap[file] || ''
         },
-        asset(preset, file, format) {
+        asset(preset, file, format, cache) {
             if(!file) return file
 
             let asset = `/storage/assets/${preset}${format ? file.split('.').slice(0, -1).concat(format).join('.') : file}`
 
 			if (!this.filemap[asset]) { 
-				this.link(asset)
+				this.link(asset, cache)
 			}
 			return this.filemap[asset] || ''
         },
-        link(file, context) {
+        link(file, context, cache = true) {
             const whiteboxStore = useWhitebox()
             window.whitebox.init('storage', (storage) => {
                 if (storage) {
                     let data = {
                         file,
-                        cache: context == 'mikser'
+                        cache
                     }
                     if (whiteboxStore.context != 'mikser') {
                         data.context = whiteboxStore.context
