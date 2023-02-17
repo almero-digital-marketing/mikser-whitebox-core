@@ -1,6 +1,6 @@
 {
   "name": "mikser-whitebox-core",
-  "version": "5.2.2",
+  "version": "5.2.3",
   "description": "",
   "files": [
     "dist",
@@ -42,7 +42,6 @@
   "peerDependencies": {
     "axios": "^1.2.3",
     "pinia": "^2.0.30",
-    "vite-plugin-mikser": "^1.0.4",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
   },
