@@ -576,7 +576,7 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 context: method,
             })
         },
-        async customizeProduct() {
+        async customizeProduct(info = {}) {
             console.log('Track customize product')
             
             await this.trackFacebook('track', 'CustomizeProduct')

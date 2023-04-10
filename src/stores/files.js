@@ -10,10 +10,6 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
     actions: {
         storage(file, cache) {
             if(!file) return file
-			if (file.indexOf('/storage') != 0 && file.indexOf('storage') != 0) {
-                if (file[0] == '/') file = '/storage' + file
-				else file = '/storage/' + file
-			}
 
 			if (!this.filemap[file]) { 
 				this.link(file, cache)
@@ -23,7 +19,7 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
         asset(preset, file, format, cache) {
             if(!file) return file
 
-            let asset = `/storage/assets/${preset}${format ? file.split('.').slice(0, -1).concat(format).join('.') : file}`
+            let asset = `/assets/${preset}${format ? file.split('.').slice(0, -1).concat(format).join('.') : file}`
 
 			if (!this.filemap[asset]) { 
 				this.link(asset, cache)

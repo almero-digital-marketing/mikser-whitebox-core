@@ -13,7 +13,7 @@ export const useWhiteboxPassports = defineStore('whitebox-passsports', {
                     this.passport = window.whitebox.services.passports?.passport || {}
 
                     window.whitebox.emmiter.on('passports.denounce', function() {
-                        setTimeout(() => this.$reset(), 3000)
+                        setTimeout(this.$reset, 3000)
                     })
                     window.whitebox.emmiter.on('passports.passport', passport => {
                         this.passport = passport
