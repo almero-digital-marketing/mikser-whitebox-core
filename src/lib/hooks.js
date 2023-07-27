@@ -18,7 +18,7 @@ function onCollectionLoaded(collection, callback) {
 function onVersionChanged(version, callback) {
     const oldVersion = localStorage.getItem('WHITEBOX_VERSION')
     if (oldVersion != version) {
-        callback(oldVersion)
+        callback(version, oldVersion)
     }
     localStorage.setItem('WHITEBOX_VERSION', version)
 }

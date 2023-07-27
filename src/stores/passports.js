@@ -20,6 +20,12 @@ export const useWhiteboxPassports = defineStore('whitebox-passsports', {
                     })
                 }
             })
-        }
+        },
+        async load() {
+            if (window.whitebox.services.passports) {
+                const { passport } = await window.whitebox.services.passports.load()
+                this.passport = passport
+            }
+        }   
     }
 })

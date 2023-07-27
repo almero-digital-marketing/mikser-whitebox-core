@@ -7,6 +7,7 @@ import { useWhiteboxSearches } from './stores/searches'
 import { feedType, metaField } from './lib/utils'
 import { useWhiteboxTracking } from './stores/tracking'
 import { useWhiteboxPassports } from './stores/passports'
+import { useWhiteboxShortener } from './stores/shortener'
 
 export {
     createMikser,
@@ -19,6 +20,7 @@ export {
     useWhiteboxSearches,
     useWhiteboxTracking,
     useWhiteboxPassports,
+    useWhiteboxShortener,
     feedType, 
     metaField,
 }
