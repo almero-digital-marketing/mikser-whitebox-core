@@ -9,6 +9,9 @@ import { useWhiteboxTracking } from './stores/tracking'
 import { useWhiteboxPassports } from './stores/passports'
 import { useWhiteboxShortener } from './stores/shortener'
 
+import WhiteboxDataSource from './core/whitebox'
+import MikserDataSource from './core/mikser'
+
 export {
     createMikser,
     useWhiteboxFiles,
@@ -23,4 +26,6 @@ export {
     useWhiteboxShortener,
     feedType, 
     metaField,
+    WhiteboxDataSource,
+    MikserDataSource
 }

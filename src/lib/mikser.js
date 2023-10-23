@@ -1,4 +1,3 @@
-import { useWhitebox } from "../stores/whitebox"
 import { useWhiteboxFiles } from "../stores/files"
 import { useWhiteboxDocuments } from "../stores/documents"
 import { useWhiteboxRoutes } from "../stores/routes"
@@ -6,12 +5,16 @@ import { useWhiteboxSearches } from "../stores/searches"
 import { useWhiteboxTracking } from "../stores/tracking"
 import { onDocumentChanged } from './hooks'
 
+import Core from "../core"
+import WhiteboxDataSource from '../core/whitebox'
+
 import navigation from './navigation'
 
-export async function createMikser({ router, store, options }) {
-	const whiteboxStore = useWhitebox(store)
-	whiteboxStore.context = options.context
-	whiteboxStore.shared = options.shared ? 'shared' : ''
+export async function createMikser({ router, store, dataSource, options }) {
+	Core.dataSource = dataSource || new WhiteboxDataSource({ 
+		context: options.context, 
+		shared: options.shared ? 'shared' : '', 
+	})
 
 	const routesStore = useWhiteboxRoutes(store)
 	let routeDefinitions = {}
@@ -57,10 +60,9 @@ export async function createMikser({ router, store, options }) {
 					return filesStore.asset
 				}
 			})
-			Object.defineProperty(app.config.globalProperties, '$sharedStorage', {
+			Object.defineProperty(app.config.globalProperties, '$dataSource', {
 				get() {
-					const filesStore = useWhiteboxFiles()
-					return filesStore.sharedStorage
+					return Core.dataSource
 				}
 			})
 			Object.defineProperty(app.config.globalProperties, '$collections', {
@@ -100,9 +102,11 @@ export async function createMikser({ router, store, options }) {
 					}
 				}
 			})
-			
-			const documentsStore = useWhiteboxDocuments(store)
-			documentsStore.liveReload(!!options.preloadDocuments)
+
+			if (Core.dataSource.liveReload) {
+				const documentsStore = useWhiteboxDocuments(store)
+				Core.dataSource.liveReload(documentsStore.updateDocument)
+			}
 
 			const tracking = useWhiteboxTracking(store)
 			tracking.options = options

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useWhitebox } from "../stores/whitebox"
+import Core from "../core"
 
 function normalizeDocument(document) {
     document.meta = document.feed[Object.keys(document.feed)[0]].meta
@@ -48,20 +48,19 @@ export const useWhiteboxSearches = defineStore('whitebox-searches', {
             }, options)
         },
         search(name, query, options = {}) {
-            const { dataContext, queryContext } = useWhitebox()
             return new Promise(resolve => {
                 this.searchMap[name] = []
                 this.searchMap[name].loaded = false
                 if (!window.whitebox) return resolve([])
                 window.whitebox.init('feed', (feed) => {
                     let data = {
-                        context: dataContext,
+                        context: Core.dataSource.dataContext,
                         vault: 'feed',
                         query: {
                             bool: {
                                 filter: {                               
                                     terms: { 
-                                        'context.keyword': queryContext 
+                                        'context.keyword': Core.dataSource.queryContext 
                                     } 
                                 },
                                 ...query,

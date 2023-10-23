@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
-import { useWhitebox } from "../stores/whitebox"
+import Core from "../core"
 
 let feedPool = {} 
 
@@ -29,6 +29,8 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
         },
         href: (state) => (href, lang, loaded) => {
             const routesStore = useWhiteboxRoutes()
+            let hash = (href || '').split(/(?=[<#])/)[1]
+            href = (href || '').split('#')[0]
 
             if (typeof lang == 'boolean') {
                 loaded = lang
@@ -49,7 +51,11 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         loaded: true,
                         meta: document.data.meta,
                         link: encodeURI(document.refId),
-                        content: document.data.content
+                        content: document.data.content,
+                        location: {
+                            path: encodeURI(document.refId),
+                            hash
+                        }
                     }
                 } else {
                     let reverse = routesStore.reverseRoutes[href]
@@ -58,6 +64,10 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                         if (route && !loaded) {
                             return {
                                 link: encodeURI(route.refId),
+                                location: {
+                                    path: encodeURI(route.refId),
+                                    hash
+                                },
                                 meta: {},
                             }	
                         }
@@ -119,6 +129,19 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
         },
     },
     actions: {
+        updateDocument(document) {
+            let href = document.data.meta.href || document.refId
+            let lang = document.data.meta.lang || ''
+            
+            if (!this.sitemap[lang]) {
+                this.sitemap[lang] = {}
+            } 
+            else {
+                let oldDocument = this.sitemap[lang][href]
+                if (oldDocument && oldDocument.stamp >= document.stamp) return
+            }
+            this.sitemap[lang][href] = Object.freeze(document)
+        },
         assignDocuments(documents) {
             this.$patch(state => {
                 for (let document of documents) {
@@ -133,147 +156,69 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             })
             console.log('Load time:', Date.now() - window.startTime + 'ms')
         },
-        updateDocuments(change) {
-            if (change.type == 'ready') {
-                console.log('Initialization time:', Date.now() - window.startTime + 'ms')
-            } else if (change.type == 'initial' || change.type == 'change') {
-                let document = change.new
-                if (!document) return
-
-                let href = document.data.meta.href || document.data.refId
-                let lang = document.data.meta.lang || ''
-                
-                if (!this.sitemap[lang]) {
-                    this.sitemap[lang] = {}
-                } 
-                else {
-                    let oldDocument = this.sitemap[lang][href]
-                    if (oldDocument && oldDocument.stamp >= document.stamp) return
-                }
-                this.sitemap[lang][href] = Object.freeze(document)
-            }
-        },
         loadDocuments(items) {
             if (!items) items = []
             const result = []
             const routesStore = useWhiteboxRoutes()
-            const { dataContext, queryContext } = useWhitebox()
-            return new Promise(resolve => {
-                if (!window.whitebox) return resolve([])
-                window.whitebox.init('feed', (feed) => {
-                    let loading = []
-                    let refIds = []
-                    for (let item of items) {
-                        if (typeof item == 'string') {
-                            if (routesStore.documentRoute) {
-                                if (routesStore.reverseRoutes[item]) {
-                                    let reverseRefIds = routesStore.reverseRoutes[item]
-                                    .filter((reverse) => 
-                                        reverse.document.meta.lang == routesStore.documentRoute.document.meta.lang && 
-                                        (
-                                            !this.sitemap[routesStore.documentRoute.document.meta.lang] || 
-                                            !this.sitemap[routesStore.documentRoute.document.meta.lang][item]
-                                        )
-                                    )
-                                    .map((reverse) => reverse.refId)
-                                    .filter((refId) => feedPool[refId] == undefined)
-                                    
-                                    refIds.push(
-                                        ...reverseRefIds
-                                    )
-                                    reverseRefIds.forEach(refId => feedPool[refId] = Date.now())
-                                } else {
-                                    let documentRefId = decodeURI(item)
-                                    
-                                    if (feedPool[documentRefId] == undefined ) {
-                                        let documentRoute = routesStore.documentRoutes[documentRefId]
-                                        if (documentRoute && !this.href(documentRoute.href, documentRoute.document.meta.lang, true)) {
-                                            refIds.push(documentRefId)
-                                            feedPool[documentRefId] = Date.now()
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            const itemId = JSON.stringify(item)
-                            if (feedPool[itemId] == undefined ) {
-                                feedPool[itemId] = []
-
-                                let data = {}
-                                if (item.query) {
-                                    data = item
-                                } else {
-                                    data.query = item
-                                }
-                                data.context = dataContext
-                                data.query.context = { 
-                                    $in: queryContext 
-                                }
-                                data.vault = 'feed'
-                                
-                                loading.push(
-                                    feed.service.catalogs.mikser
-                                    .find(data)
-                                    .then((documents) => {
-                                        feedPool[itemId].push(...documents)
-                                        result.push(...feedPool[itemId])
-                                        this.assignDocuments(documents)
-                                    })
+            let loading = []
+            let refIds = []
+            for (let item of items) {
+                if (typeof item == 'string') {
+                    if (routesStore.documentRoute) {
+                        if (routesStore.reverseRoutes[item]) {
+                            let reverseRefIds = routesStore.reverseRoutes[item]
+                            .filter((reverse) => 
+                                reverse.document.meta.lang == routesStore.documentRoute.document.meta.lang && 
+                                (
+                                    !this.sitemap[routesStore.documentRoute.document.meta.lang] || 
+                                    !this.sitemap[routesStore.documentRoute.document.meta.lang][item]
                                 )
-                            } else {
-                                result.push(...feedPool[itemId])
+                            )
+                            .map((reverse) => reverse.refId)
+                            .filter((refId) => feedPool[refId] == undefined)
+                            
+                            refIds.push(
+                                ...reverseRefIds
+                            )
+                            reverseRefIds.forEach(refId => feedPool[refId] = Date.now())
+                        } else {
+                            let documentRefId = decodeURI(item)
+                            
+                            if (feedPool[documentRefId] == undefined ) {
+                                let documentRoute = routesStore.documentRoutes[documentRefId]
+                                if (documentRoute && !this.href(documentRoute.href, documentRoute.document.meta.lang, true)) {
+                                    refIds.push(documentRefId)
+                                    feedPool[documentRefId] = Date.now()
+                                }
                             }
                         }
                     }
-
-                    if (refIds.length) {
-                        let data = {
-                            vault: 'feed',
-                            cache: '1h',
-                            context: dataContext,
-                            query: {
-                                context: { 
-                                    $in: queryContext 
-                                },
-                                refId: {
-                                    $in: refIds,
-                                },
-                            },
-                        }
+                } else {
+                    const itemId = JSON.stringify(item)
+                    if (feedPool[itemId] == undefined ) {
+                        feedPool[itemId] = []                              
                         loading.push(
-                            feed.service.catalogs.mikser
-                            .find(data)
+                            Core.dataSource.loadDocumentsByQuery(item)
                             .then((documents) => {
-                                result.push(...documents)
+                                feedPool[itemId].push(...documents)
+                                result.push(...feedPool[itemId])
                                 this.assignDocuments(documents)
                             })
                         )
+                    } else {
+                        result.push(...feedPool[itemId])
                     }
-                    return Promise.all(loading).then(() => resolve(result))
-                })
-            })
-        },
-        liveReload(initial) {
-            if (!window.whitebox) return
-            const { dataContext, queryContext } = useWhitebox()
-            window.whitebox.init('feed', (feed) => {
-                window.whitebox.emmiter.on('feed.change', (change) => {
-                    if (change.type != 'ready') console.log('Feed change:', change)
-                    this.updateDocuments(change)
-                })
-                let data = { 
-                    vault: 'feed', 
-                    context: dataContext,
-                    query: queryContext.reduce((query, context) => {
-                        if (!query) {
-                            return `item("context").eq("${ context }")`
-                        }
-                        return query += `.or(item("context").eq("${ context }"))`
-                    }, ''),
-                    initial
                 }
-                feed.service.catalogs.mikser.changes(data)
-            })
-        }
+            }
+
+            loading.push(
+                Core.dataSource.loadDocuments(refIds)
+                .then((documents) => {
+                    result.push(...documents)
+                    this.assignDocuments(documents)
+                })
+            )
+            return Promise.all(loading).then(() => result)
+        },
     }
 })

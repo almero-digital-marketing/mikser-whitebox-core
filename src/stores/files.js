@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useWhitebox } from "../stores/whitebox"
+import Core from "../core"
 
 export const useWhiteboxFiles = defineStore('whitebox-files', {
     state: () => {
@@ -10,59 +10,27 @@ export const useWhiteboxFiles = defineStore('whitebox-files', {
     actions: {
         storage(file, cache) {
             if(!file) return file
-
-			if (!this.filemap[file]) { 
-				this.link(file, false, cache)
-			}
-			return this.filemap[file] || ''
+            return this.link(file, { cache })
         },
         asset(preset, file, format, cache) {
             if(!file) return file
-
             let asset = `/assets/${preset}${format ? file.split('.').slice(0, -1).concat(format).join('.') : file}`
-
-			if (!this.filemap[asset]) { 
-				this.link(asset, false, cache)
-			}
-			return this.filemap[asset] || ''
+            return this.link(asset, { cache })
         },
-        link(file, context, cache = true) {
-            const whiteboxStore = useWhitebox()
-            window.whitebox.init('storage', (storage) => {
-                if (storage) {
-                    let data = {
-                        file,
-                        cache
-                    }
-                    if (whiteboxStore.context != 'mikser') {
-                        data.context = whiteboxStore.context
-                    }
-                    if (context) {
-                        data.context = context
-                    }
-                    let result = storage.service.link(data)
-                    if (typeof result == 'string') {
-                        if (this.filemap[file] != result) this.filemap[file] = result
-                    } else {
-                        result.then(link => {
-                            if (this.filemap[file] != link) this.filemap[file] = link
-                        })
-                    }
-                }
+        link(file, options) {
+            Core.dataSource.getLink(file, options)
+            .then(link => {
+                if (this.filemap[file] != link) this.filemap[file] = link
             })
+            return this.filemap[file] || ''
         },
         sharedStorage(file) {
-            if(!file) return file
-			if (file.indexOf('/storage') != 0 && file.indexOf('storage') != 0) {
-                if (file[0] == '/') file = '/storage' + file
-				else file = '/storage/' + file
-			}
+            Core.dataSource.getSharedLink(file, options)
+            .then(link => {
+                if (this.filemap[file] != link) this.filemap[file] = link
+            })
+            return this.filemap[file] || ''
 
-			if (!this.filemap[file]) {
-                const { shared } = useWhitebox(store)
-				this.link(file, shared)
-			}
-			return this.filemap[file] || ''
         }
 
     }

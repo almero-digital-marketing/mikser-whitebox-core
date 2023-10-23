@@ -129,32 +129,34 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 window.fbq(track, event, context, { eventID: eventId })
             }
 
-            let data = {
-                event,
-                eventId,
-                context,
-                url: window.location.href,
-                timestamp: Date.now()
-            }
-
-            const { connect } = window.whitebox.services
-            let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
-            data.identities = [ 
-                ...this.identities, 
-                { 
-                    id: "fingerprint",
-                    name: "userId", 
-                    value: userId
-                }
-            ]
-            if (connect.runtime.sst) {
-                await axios.post(`${connect.runtime.url}/track`, data, {
-                    headers: {
-                        'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
-                        'Fingerprint': connect.runtime.fingerprint,
+            window.whitebox?.init('analytics', async () => {
+                const { connect } = window.whitebox.services
+                let data = {
+                    event,
+                    eventId,
+                    context,
+                    url: window.location.href,
+                    timestamp: Date.now()
+                }   
+                let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
+                data.identities = [ 
+                    ...this.identities, 
+                    { 
+                        id: "fingerprint",
+                        name: "userId", 
+                        value: userId
                     }
-                }).catch(console.error)
-            }  
+                ]
+                if (connect.runtime.sst) {
+                    await axios.post(`${connect.runtime.url}/track`, data, {
+                        headers: {
+                            'Authorization': 'Bearer ' + connect.runtime.tokens.connect,
+                            'Fingerprint': connect.runtime.fingerprint,
+                        }
+                    }).catch(console.error)
+                }  
+            })
+
         },
         trackContext(data = {}) { 
             return new Promise(resolve => {
@@ -220,7 +222,9 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                             db: this.identities.find(({ name }) => name == 'birthdate')?.value.replace(/\//g, ''),
                             ge: this.identities.find(({ name }) => name == 'gender')?.value,
                             country: this.identities.find(({ name }) => name == 'country')?.value,
-                            external_id: userId
+                            external_id: userId,
+                            client_ip_address: window.whitebox.services.connect.runtime.ip,
+                            client_user_agent: window.navigator.userAgent
                         }))
                     }
                     if (window.gtag) {
@@ -258,58 +262,60 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                 this.options = options
             }
 
-            const { connect } = window.whitebox.services
-            let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
-
-            const fbp = getFbp()
-            if (fbp) {
-                this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
-                console.log('Fbp:', fbp)
-            }
-            const fbc = getFbc()
-            if (fbc) {
-                this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
-                console.log('Fbc:', fbp)
-            }
-            
-            if (window.fbq) {
-                window.fbq('init', this.options.fbq, {
-                    external_id: userId
-                })          
-            }
-            
-            if (window.gtag) {
-                window.gtag('js', new Date())
-                if (Array.isArray(this.options.gtag)) {
-                    for(let tagId of this.options.gtag) {
-                        window.gtag('config', tagId, {
+            window.whitebox?.init('analytics', async () => {
+                const { connect } = window.whitebox.services
+                let userId = localStorage.getItem(localKey('whiteboxUserId')) || await sha256(connect.runtime.fingerprint)
+    
+                const fbp = getFbp()
+                if (fbp) {
+                    this.identities.push({ id: 'fingerprint', name: 'fbp', value: fbp })
+                    console.log('Fbp:', fbp)
+                }
+                const fbc = getFbc()
+                if (fbc) {
+                    this.identities.push({ id: 'fingerprint', name: 'fbc', value: fbc })
+                    console.log('Fbc:', fbp)
+                }
+                
+                if (window.fbq) {
+                    window.fbq('init', this.options.fbq, {
+                        external_id: userId
+                    })          
+                }
+                
+                if (window.gtag) {
+                    window.gtag('js', new Date())
+                    if (Array.isArray(this.options.gtag)) {
+                        for(let tagId of this.options.gtag) {
+                            window.gtag('config', tagId, {
+                                user_id: userId
+                            })
+                        }
+                    } else {
+                        window.gtag('config', this.options.gtag, {
                             user_id: userId
                         })
                     }
-                } else {
-                    window.gtag('config', this.options.gtag, {
-                        user_id: userId
+                }
+    
+                await this.trackFacebook('track', 'PageView')
+                
+                const queryString = window.location.search
+                const urlParams = new URLSearchParams(queryString)
+                if (urlParams.has('utm_source')) {
+                    const source = urlParams.get('utm_source')
+                    const medium = urlParams.get('utm_medium')
+                    const campaign = urlParams.get('utm_campaign')
+    
+                    console.log('Track utm:', source, medium, campaign)
+                    let event = 'Utm'+ source.charAt(0).toUpperCase() + source.slice(1)
+                    await this.trackFacebook('trackCustom', event, {
+                        source,
+                        medium,
+                        campaign,
                     })
                 }
-            }
-
-            await this.trackFacebook('track', 'PageView')
-            
-            const queryString = window.location.search
-            const urlParams = new URLSearchParams(queryString)
-            if (urlParams.has('utm_source')) {
-                const source = urlParams.get('utm_source')
-                const medium = urlParams.get('utm_medium')
-                const campaign = urlParams.get('utm_campaign')
-
-                console.log('Track utm:', source, medium, campaign)
-                let event = 'Utm'+ source.charAt(0).toUpperCase() + source.slice(1)
-                await this.trackFacebook('trackCustom', event, {
-                    source,
-                    medium,
-                    campaign,
-                })
-            }
+            })
 
             window.whitebox?.init('shortener', shortener => {
                 if (shortener) {

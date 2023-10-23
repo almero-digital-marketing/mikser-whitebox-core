@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxDocuments } from '../stores/documents'
-import { useWhitebox } from "../stores/whitebox"
+import Core from "../core"
 
 export const useWhiteboxRoutes = defineStore('whitebox-routes', {
     state: () => {
@@ -70,103 +70,69 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			}
 			return Promise.all(loadDocuments)
 		},
-        loadRoutes({ documentRoutes, reverseRoutes, projection, routeDefinitions }) {
+        async loadRoutes({ documentRoutes, reverseRoutes, routeDefinitions }) {
 			Object.assign(this.documentRoutes, documentRoutes)
             Object.assign(this.reverseRoutes, reverseRoutes)
-            this.projection = Object.assign({}, projection, {
-				'refId': 1,
-				'data.meta.href': 1,
-				'data.meta.route': 1,
-				'data.meta.lang': 1,
-				'data.meta.component': 1,
-			})
-			
-            return new Promise((resolve, reject) => {
-				if (!window.whitebox) return resolve([])
-				const { dataContext, queryContext } = useWhitebox()
-				window.whitebox.init('feed', (feed) => {
-					let data = {
-						context: dataContext,
-						vault: 'feed',
-						query: { 
-							context: {
-								$in: queryContext 
-							}
-						},
-						projection: this.projection,
-						cache: '1h',
-					}
-					if (feed.service.catalogs.mikser) {
-						feed.service.catalogs.mikser
-						.find(data)
-						.then((documents) => {
-							console.log('Context:', dataContext, 'Routes:', Object.keys(routeDefinitions).length, 'Documents:', documents)
-							let routes = []
-							for (let document of documents) {
-								const routeDefinition = routeDefinitions[document.data.meta.component]
-								
-								this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
-								this.reverseRoutes[document.data.meta.href].push({ 
-									refId: document.refId,
-									document: document.data,
-									endpoint: 'mikser'
-								})
-								let collections = {}
-								if (routeDefinition?.meta?.collections) {
-									for(let collectionName in routeDefinition.meta.collections) {
-										collections[collectionName] = {
-											query: routeDefinition.meta.collections[collectionName]
-										}
-									}
-								}
-								this.documentRoutes[document.refId] = {
-									href: document.data.meta.href,
-									document: document.data,
-									endpoint: 'mikser',
-									collections
-								}
-								
-								if (routeDefinition) {
-									routes.push({
-										path: encodeURI(document.refId),
-										component: routeDefinition.component,
-										meta: routeDefinition.meta,
-										alias: ['/' + document.data.meta.lang + document.data.meta.href],
-										props: this.documentRoutes[document.refId],
-									})
-									if (document.data.meta.route) {
-										let documentMeta = { ...routeDefinition.meta }
-										documentMeta.refId = document.refId
-										if (documentMeta.documents) {
-											if (Array.isArray(documentMeta.documents)) {
-												documentMeta.documents = [document.refId, ...documentMeta.documents]
-											} else {
-												documentMeta.documents = [document.refId, documentMeta.documents]
-											}
-										} else {
-											documentMeta.documents = document.refId
-										}
-										routes.push({
-											path: encodeURI(document.refId) + document.data.meta.route,
-											component: routeDefinition.component,
-											meta: documentMeta,
-											props: this.documentRoutes[document.refId],
-										})
-									}
-								}
-							}
-							console.log('Routes:', routes.length, Date.now() - window.startTime + 'ms')
-							this.routes = routes
-						
-							resolve(routes)
-						})
-						.catch(reject)
-					} else {
-						console.warn('Mikser catalog is missing')
-						resolve([])
-					}
+			console.log('Routes:', Object.keys(routeDefinitions).length)
+			const documents = await Core.dataSource.loadSitemap()
+			let routes = []
+			for (let document of documents) {
+				const routeDefinition = routeDefinitions[document.data.meta.component]
+				
+				this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
+				this.reverseRoutes[document.data.meta.href].push({ 
+					refId: document.refId,
+					document: document.data,
+					endpoint: 'mikser'
 				})
-			})
+				let collections = {}
+				if (routeDefinition?.meta?.collections) {
+					for(let collectionName in routeDefinition.meta.collections) {
+						collections[collectionName] = {
+							query: routeDefinition.meta.collections[collectionName]
+						}
+					}
+				}
+				this.documentRoutes[document.refId] = {
+					href: document.data.meta.href,
+					document: document.data,
+					endpoint: 'mikser',
+					collections
+				}
+				
+				if (routeDefinition) {
+					routes.push({
+						path: encodeURI(document.refId),
+						component: routeDefinition.component,
+						meta: routeDefinition.meta,
+						alias: ['/' + document.data.meta.lang + document.data.meta.href],
+						props: this.documentRoutes[document.refId],
+					})
+					if (document.data.meta.route) {
+						let documentMeta = { ...routeDefinition.meta }
+						documentMeta.refId = document.refId
+						if (documentMeta.documents) {
+							if (Array.isArray(documentMeta.documents)) {
+								documentMeta.documents = [document.refId, ...documentMeta.documents]
+							} else {
+								documentMeta.documents = [document.refId, documentMeta.documents]
+							}
+						} else {
+							documentMeta.documents = document.refId
+						}
+						routes.push({
+							path: encodeURI(document.refId) + document.data.meta.route,
+							component: routeDefinition.component,
+							meta: documentMeta,
+							props: this.documentRoutes[document.refId],
+						})
+					}
+				}
+			}
+			console.log('Routes:', routes, Date.now() - window.startTime + 'ms')
+			this.routes = routes
+		
+			return routes	
 		}
 	}
 })
