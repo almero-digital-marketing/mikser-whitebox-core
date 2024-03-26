@@ -11,8 +11,11 @@ export const useWhiteboxShortener = defineStore('whitebox-shortener', {
             return new Promise(resolve => {
                 window.whitebox?.init('shortener', shortener => {
                     if (shortener) {
-                        this.data = shortener.service.data
-                        resolve(shortener.service.data)
+                        shortener.service.load()
+                        .then((data) => {
+                            this.data = data
+                            resolve(data)
+                        })
                     }
                 })
             })
