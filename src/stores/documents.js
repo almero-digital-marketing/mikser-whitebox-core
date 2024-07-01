@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
 import Core from "../core"
+import { ref } from 'vue'
 
 let feedPool = {} 
 
@@ -8,6 +9,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
     state: () => {
         return {
 			sitemap: {},
+            context: {}
         }
     },
     getters: {
@@ -220,5 +222,10 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
             )
             return Promise.all(loading).then(() => result)
         },
-    }
+        loadContext() {
+            const routesStore = useWhiteboxRoutes()
+            return Core.dataSource.loadContext(routesStore.currentRefId)
+            .then(context => this.context = context)
+        }
+    },
 })

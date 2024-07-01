@@ -1,6 +1,8 @@
 export default class {
-    constructor({ baseUrl = '' } = {}) {
+    constructor({ baseUrl = '', documentName = 'document', contextName = 'context' } = {}) {
         this.baseUrl = baseUrl
+        this.documentName = documentName
+        this.contextName = contextName
     }
     async loadSitemap() {
         const response = await fetch(`${this.baseUrl}/data/mikser.json`)
@@ -10,9 +12,14 @@ export default class {
     loadDocuments(refIds) {
         return Promise.all(refIds.map(refId => {
             if (refId == '/') refId = '/index'
-            return fetch(`${this.baseUrl}/data/${refId}.json`)
+            return fetch(`${this.baseUrl}/data/${refId}${this.documentName ? '.' + this.documentName : ''}.json`)
             .then(responese => responese.json())
         }))
+    }
+    loadContext(refId) {
+        if (refId == '/') refId = '/index'
+        return fetch(`${this.baseUrl}/data/${refId}.${this.contextName}.json`)
+        .then(responese => responese.json())
     }
     async loadDocumentsByQuery(query) {
         const response = await fetch(`${this.baseUrl}/data/${query.path || query}.json`)

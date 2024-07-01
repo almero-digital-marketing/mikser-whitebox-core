@@ -42,6 +42,12 @@ export async function createMikser({ router, store, dataSource, options }) {
 					return documentsStore.document
 				}
 			})
+			Object.defineProperty(app.config.globalProperties, '$context', {
+				get() {
+					const documentsStore = useWhiteboxDocuments()
+					return documentsStore.context
+				}
+			})
 			Object.defineProperty(app.config.globalProperties, '$alternates', {
 				get() {
 					const documentsStore = useWhiteboxDocuments()
