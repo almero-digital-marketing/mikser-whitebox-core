@@ -77,6 +77,7 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			const documents = await Core.dataSource.loadSitemap()
 			let routes = []
 			for (let document of documents) {
+				if (!document.data?.meta?.component) continue
 				const routeDefinition = routeDefinitions[document.data.meta.component]
 				
 				this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
