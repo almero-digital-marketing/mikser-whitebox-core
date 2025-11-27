@@ -116,9 +116,9 @@ export async function createMikser({ router, store, dataSource, options }) {
 
 			const tracking = useWhiteboxTracking(store)
 			tracking.options = options
-			onDocumentChanged(() => {
-				tracking.pageView()
-				tracking.session()
+			onDocumentChanged(async () => {
+				await tracking.pageView()
+				await tracking.session()
 			})
 		}
 	}

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { useWhiteboxRoutes } from "./routes"
 import Core from "../core"
-import { ref } from 'vue'
 
 let feedPool = {} 
 
@@ -70,7 +69,7 @@ export const useWhiteboxDocuments = defineStore('whitebox-documents', {
                                     path: encodeURI(route.refId),
                                     hash
                                 },
-                                meta: {},
+                                meta: route.document.meta,
                             }	
                         }
                     }

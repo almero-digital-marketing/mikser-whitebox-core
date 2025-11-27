@@ -1,10 +1,10 @@
-const vue = require('@vitejs/plugin-vue')
-const html = require('vite-plugin-html').createHtmlPlugin
-const os = require('os')
-const { machineIdSync } = require('node-machine-id')
-const path = require('path')
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import os from 'os'
+import { machineIdSync } from 'node-machine-id'
+import path from 'path'
 
-module.exports = (options, domainConfig) => {
+export default defineConfig((options) => {
     const machineId = machineIdSync() + '_' + os.hostname() + '_' + os.userInfo().username
 
     console.log(options.mode)
@@ -19,14 +19,6 @@ module.exports = (options, domainConfig) => {
         },
         plugins: [
             vue(),
-            html({
-                inject: {
-                    data: {
-                        domainConfig
-                    },
-                },
-                minify: true,
-            }),
             {
                 name: 'gate',
                 configureServer(server) {
@@ -47,7 +39,7 @@ module.exports = (options, domainConfig) => {
             rollupOptions: {
               // make sure to externalize deps that shouldn't be bundled
               // into your library
-              external: ['vue', 'vue-demi', 'pinia', 'axios'],
+              external: ['vue', 'pinia', 'axios'],
               output: {
                 exports: 'named',
                 // Provide global variables to use in the UMD build
@@ -55,11 +47,10 @@ module.exports = (options, domainConfig) => {
                 globals: {
                   pinia: 'Pinia',
                   vue: 'Vue',
-                  'vue-demi': 'VueDemi',
                   'axios': 'Axios'
                 }
               }
             }
         }
     }
-} 
+})
