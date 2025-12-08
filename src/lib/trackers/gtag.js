@@ -1,5 +1,5 @@
-import { debounce } from "../utils"
-import { removeUndefined } from "../utils"
+import { debounce, removeUndefined } from "../utils"
+import { trackNone } from "./track"
 
 const name = 'gtag'
 
@@ -170,10 +170,6 @@ async function trackCustom(eventId, eventName, context = {}) {
     window.gtag('event', eventName, context)
 }
 
-async function trackNone(eventId, eventName) {
-    console.log(`Track ${eventName} none:`, eventId, name)
-}
-
 export default function fbqTracker() {
     if (window.gtag) {
         return {
@@ -190,13 +186,13 @@ export default function fbqTracker() {
             trackFindLocation,
             trackInitiateCheckout,
             trackPurchase,
-            trackSchedule: (eventId) => trackNone(eventId, 'Schedule'),
+            trackSchedule: (eventId) => trackNone(name, eventId, 'Schedule'),
             trackSearch,
             trackStartTrial,
             trackSubscribe,
             trackViewContent,
             trackLogin,
-            trackCustomizeProduct: (eventId) => trackNone(eventId, 'CustomizeProduct'),
+            trackCustomizeProduct: (eventId) => trackNone(name, eventId, 'CustomizeProduct'),
             trackCustom,
         }
     }

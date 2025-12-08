@@ -4,7 +4,6 @@ import axios from 'axios'
 import { sha256, localKey } from '../lib/utils.js'
 import fbqTracker from '../lib/trackers/fbq.js'
 import gtagTracker from '../lib/trackers/gtag.js'
-import sstTracker from '../lib/trackers/sst.js'
 import mixpanelTracker from '../lib/trackers/mixpanel.js'
 import ttqTracker from '../lib/trackers/ttq.js'
 import PQueue from 'p-queue'
@@ -16,7 +15,6 @@ const trackers = [
     gtagTracker(),
     ttqTracker(),
     mixpanelTracker(),
-    sstTracker(),
 ]
 
 async function track(tracking, callback) {
@@ -87,7 +85,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
                     })
                 })
                 await this.pageView()
-                await this.session()
 
                 await new Promise(resolve => {
                     if (!window.whitebox?.services?.shortener) return resolve()
@@ -201,22 +198,6 @@ export const useWhiteboxTracking = defineStore('whitebox-tracking', {
             queue.add(async () => {
                 await track(this.options.tracking, (tracker, eventId) => tracker.trackCustomizeProduct(eventId, context, this.identities, this.options))
             })
-        },
-        async session() {
-            let pages = (Number(localStorage.getItem('whiteboxPages')) || 0) + 1
-            let last = new Date(Number(localStorage.getItem('whiteboxLastVisit')) || Date.now())
-            let sessions = (Number(localStorage.getItem('whiteboxSessions')) || 1)
-            if (last - Date.now() > 3 * 60 * 1000) {
-                sessions++
-            }
-            if (pages > 1) {
-                queue.add(async () => {
-                    await track(this.options.tracking, (tracker, eventId) => tracker.trackCustom(eventId, 'Session', { pages, sessions }, this.identities, this.options))
-                })
-            }
-            localStorage.setItem('whiteboxPages', pages)
-            localStorage.setItem('whiteboxLastVisit', Date.now())
-            localStorage.setItem('whiteboxSessions', sessions)
         },
         async watch(context) {
             if (context.percent > 0) {

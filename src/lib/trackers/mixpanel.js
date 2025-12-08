@@ -1,4 +1,5 @@
 import { removeUndefined } from "../utils"
+import { trackNone } from "./track"
 
 const name = 'mixpanel'
 
@@ -12,10 +13,10 @@ async function trackInit(eventId, identities, options) {
             })
         }
     } else {
-        window.mixpanel.init(mixpanel.token, {
+        window.mixpanel.init(options.tracking.mixpanel.token, {
             autocapture: true,
-            record_sessions_percent: mixpanel.record_sessions_percent || 100,
-            api_host: mixpanel.api_host,
+            record_sessions_percent: options.tracking.mixpanel.record_sessions_percent || 100,
+            api_host: options.tracking.mixpanel.api_host,
         })
     }
     console.log('Track Init:', eventId, name, options.tracking.mixpanel)
@@ -45,16 +46,12 @@ async function trackIdentity(eventId, identities) {
     console.log('Track Identity:', eventId, name, userId)
 }
 
-async function trackNone(eventId, eventName) {
-    console.log(`Track ${eventName} none:`, eventId, name)
-}
-
 export default function sstTracker() {
     return {
         name,
         trackInit,
         trackIdentity,
-        trackPageView: (eventId) => trackNone(eventId, 'PageView'),
+        trackPageView: (eventId) => trackNone(name, eventId, 'PageView'),
         trackAddToCart: (eventId, context, identities) => track(eventId, 'AddToCart', context, identities),
         trackRemoveFromCart: (eventId, context, identities) => track(eventId, 'RemoveFromCart', context, identities),
         trackAddToWishlist: (eventId, context, identities) => track(eventId, 'AddToWishlist', context, identities),

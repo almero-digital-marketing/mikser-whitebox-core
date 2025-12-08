@@ -1,5 +1,5 @@
-import { debounce } from "../utils"
-import { removeUndefined } from "../utils"
+import { debounce, removeUndefined } from "../utils"
+import { trackNone, trackSst } from "./track"
 
 const name = 'fbq'
 let trackNextPageView = true
@@ -106,103 +106,133 @@ async function trackIdentity(eventId, identities, options) {
     console.log('Track Identity:', eventId, name, userId)
 }
 
-async function trackPageView(eventId) {
+async function trackPageView(eventId, context, identities) {
     const pathName = decodeURI(window.location.pathname)
     if (trackNextPageView) {
+        context = {
+            page_path: pathName
+        }
         console.log('Track PageView:', eventId, name, pathName)
-        window.fbq('track', 'PageView', { page_path: pathName }, { eventID: eventId })
+        window.fbq('track', 'PageView', context, { eventID: eventId })
+        await trackSst(name, eventId, 'PageView', context, identities)
         trackNextPageView = false
     }
 }
 
-async function trackAddToCart(eventId, { items }) {
-    console.log('Track AddToCart:', eventId, name)
-    window.fbq('track', 'AddToCart', items2fbq(items), { eventID: eventId })
+async function trackAddToCart(eventId, { items }, identities) {
+    const context = items2fbq(items)
+    console.log('Track AddToCart:', eventId, name, context)
+    window.fbq('track', 'AddToCart', context, { eventID: eventId })
+    await trackSst(name, eventId, 'AddToCart', context, identities)
 }
 
-async function trackAddToWishlist(eventId, { items }) {
+async function trackAddToWishlist(eventId, { items }, identities) {
+    const context = items2fbq(items)
     console.log('Track AddToWishlist:', eventId, name, items.map(item => item.name).join(', '))
-    window.fbq('track', 'AddToWishlist', items2fbq(items), { eventID: eventId })
+    window.fbq('track', 'AddToWishlist', context, { eventID: eventId })
+    await trackSst(name, eventId, 'AddToWishlist', context, identities)
+
 }
 
-async function trackCompleteRegistration(eventId, { method }) {
+async function trackCompleteRegistration(eventId, { method }, identities) {
+    const context = { content_name: method }
     console.log('Track CompleteRegistration:', eventId, name, method)
-    window.fbq('track', 'CompleteRegistration', { content_name: method }, { eventID: eventId })
+    window.fbq('track', 'CompleteRegistration', context, { eventID: eventId })
+    await trackSst(name, eventId, 'CompleteRegistration', context, identities)
 }
 
-async function trackLead(eventId, { currency, value, name: content, category }) {
-    console.log('Track Lead:', eventId, name, currency, value, content)
-    window.fbq('track', 'Lead', {
+async function trackLead(eventId, { currency, value, name: content, category }, identities) {
+    const context = {
         content_name: content,
         content_category: category,
         currency: currency,
         value: value,
-    }, { eventID: eventId })
+    }
+    console.log('Track Lead:', eventId, name, currency, value, content)
+    window.fbq('track', 'Lead', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Lead', context, identities)
 }
 
-async function trackContact(eventId, { name: content, category }) {           
-    console.log('Track Contact:', eventId, name, category, content)
-    window.fbq('track', 'Contact', {
+async function trackContact(eventId, { name: content, category }, identities) {    
+    const context = {
         content_name: content,
         content_category: category,
-    }, { eventID: eventId })
+    }      
+    console.log('Track Contact:', eventId, name, category, content)
+    window.fbq('track', 'Contact', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Contact', context, identities)
 }
 
-async function trackFindLocation(eventId, { category, locationId }) {
-    console.log('Track FindLocation:', eventId, name, category, locationId)
-    window.fbq('track', 'FindLocation', {
+async function trackFindLocation(eventId, { category, locationId }, identities) {
+    const context = {
         content_category: category ? 'location_' + category : 'location',
         content_name: locationId
-    }, { eventID: eventId })
+    }
+    console.log('Track FindLocation:', eventId, name, category, locationId)
+    window.fbq('track', 'FindLocation', context, { eventID: eventId })
+    await trackSst(name, eventId, 'FindLocation', context, identities)
 }
 
-async function trackInitiateCheckout(eventId, { items }) {
+async function trackInitiateCheckout(eventId, { items }, identities) {
+    const context = items2fbq(items)
     console.log('Track InitiateCheckout:', eventId, name, items?.map(item => item.name).join(', '))
-    window.fbq('track', 'InitiateCheckout', items2fbq(items), { eventID: eventId })
+    window.fbq('track', 'InitiateCheckout', context, { eventID: eventId })
+    await trackSst(name, eventId, 'InitiateCheckout', context, identities)
 }
 
-async function trackPurchase(eventId, { items }) {
+async function trackPurchase(eventId, { items }, identities) {
+    const context = items2fbq(items)
     console.log('Track Purchase:', eventId, name, items.map(item => item.name).join(', '))
-    window.fbq('track', 'Purchase', items2fbq(items), { eventID: eventId })
+    window.fbq('track', 'Purchase', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Purchase', context, identities)
 }
 
-async function trackSchedule(eventId) {
+async function trackSchedule(eventId, context, identities) {
+    context = {}
     console.log('Track Schedule:', eventId, name)
-    window.fbq('track', 'Schedule', {}, { eventID: eventId })
+    window.fbq('track', 'Schedule', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Schedule', context, identities)
 }
 
 async function trackSearch(eventId, { term }) {
+    const context = { search_string: term }
     console.log('Track Search:', eventId, name, term)
-    window.fbq('track', 'Search', { search_string: term }, { eventID: eventId })
+    window.fbq('track', 'Search', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Search', context, identities)
 }
 
-async function trackStartTrial(eventId, { currency, value = 0, predictedLtv = 0 }) {
+async function trackStartTrial(eventId, { currency, value = 0, predictedLtv = 0 }, identities) {
+    const context = { currency, value, predictedLtv }
     console.log('Track StartTrial:', eventId, name, currency, value, predictedLtv)
-    window.fbq('track', 'StartTrial', { currency, value, predictedLtv }, { eventID: eventId })
+    window.fbq('track', 'StartTrial', context, { eventID: eventId })
+    await trackSst(name, eventId, 'StartTrial', context, identities)
 }
 
-async function trackSubscribe(eventId, { currency, value = 0, predictedLtv = 0 }) {
+async function trackSubscribe(eventId, { currency, value = 0, predictedLtv = 0 }, identities) {
+    const context = { currency, value, predictedLtv }
     console.log('Track Subscribe:', eventId, name, currency, value, predictedLtv)
-    window.fbq('track', 'Subscribe', { currency, value, predictedLtv }, { eventID: eventId })
+    window.fbq('track', 'Subscribe', context, { eventID: eventId })
+    await trackSst(name, eventId, 'Subscribe', context, identities)
 }
 
-async function trackViewContent(eventId, { category, name: content, contentId, currency, value }) {
+async function trackViewContent(eventId, { category, name: content, contentId, currency, value }, identities) {
+    const context =  { content_ids: [contentId], content_name: content, content_category: category, currency, value }
     console.log('Track ViewContent:', eventId, name, category, content, contentId, currency, value)
-    window.fbq('track', 'ViewContent', { content_ids: [contentId], content_name: content, content_category: category, currency, value }, { eventID: eventId })
+    window.fbq('track', 'ViewContent', context, { eventID: eventId })
+    await trackSst(name, eventId, 'ViewContent', context, identities)
 }
 
-async function trackCustomizeProduct(eventId) {
+async function trackCustomizeProduct(eventId, context, identities) {
+    context = {}
     console.log('Track CustomizeProduct:', eventId, name)
-    window.fbq('track', 'CustomizeProduct', {}, { eventID: eventId })
+    window.fbq('track', 'CustomizeProduct', context, { eventID: eventId })
+    await trackSst(name, eventId, 'CustomizeProduct', context, identities)
 }
 
-async function trackCustom(eventId, eventName, context = {}) {
+async function trackCustom(eventId, eventName, context = {}, identities) {
     console.log('Track Custom:', eventId, name, eventName, context)
     window.fbq('trackCustom', eventName, context, { eventID: eventId })
-}
-
-async function trackNone(eventId, eventName) {
-    console.log(`Track ${eventName} none:`, eventId, name)
+    await trackSst(name, eventId, eventName, context, identities)
 }
 
 export default function fbqTracker() {
@@ -213,7 +243,7 @@ export default function fbqTracker() {
             trackIdentity,
             trackPageView: debounce(trackPageView, 500),
             trackAddToCart,
-            trackRemoveFromCart: (eventId) => trackNone(eventId, 'RemoveFromCart'),
+            trackRemoveFromCart: (eventId) => trackNone(name, eventId, 'RemoveFromCart'),
             trackAddToWishlist,
             trackCompleteRegistration,
             trackLead,
@@ -226,7 +256,7 @@ export default function fbqTracker() {
             trackStartTrial,
             trackSubscribe,
             trackViewContent,
-            trackLogin: (eventId) => trackNone(eventId, 'Login'),
+            trackLogin: (eventId) => trackNone(name, eventId, 'Login'),
             trackCustomizeProduct,
             trackCustom,
         }
