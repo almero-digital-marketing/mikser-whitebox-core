@@ -118,7 +118,6 @@ export async function createMikser({ router, store, dataSource, options }) {
 			tracking.options = options
 			onDocumentChanged(async () => {
 				await tracking.pageView()
-				await tracking.session()
 			})
 		}
 	}

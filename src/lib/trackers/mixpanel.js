@@ -28,7 +28,7 @@ async function track(eventId, eventName, context = {}) {
 }
 
 async function trackIdentity(eventId, identities) {
-    const userId = identities.find(({ name }) => name == 'userId').value
+    const userId = identities.find(({ name }) => name == 'userId')?.value
     const person = removeUndefined({
         $email: identities.find(({ name }) => name == 'email')?.value,
         $name: identities.find(({ id }) => id == 'name')?.value,
@@ -40,7 +40,7 @@ async function trackIdentity(eventId, identities) {
         }
     }
     if (person.$name || person.$email || person.$phone) {
-        window.mixpanel.identify(userId)
+        if (userId) window.mixpanel.identify(userId)
         window.mixpanel.people.set(person)
     }
     console.log('Track Identity:', eventId, name, userId)

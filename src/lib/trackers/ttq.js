@@ -49,7 +49,7 @@ async function trackInit(eventId, identities, options) {
 }
 
 async function trackIdentity(eventId, identities) {
-    const userId = identities.find(({ name }) => name == 'userId').value
+    const userId = identities.find(({ name }) => name == 'userId')?.value
     const userData = removeUndefined({
         email: identities.find(({ name }) => name == 'email')?.value,
         phone_number: identities.find(({ name }) => name == 'e164')?.value,

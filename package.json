@@ -1,6 +1,6 @@
 {
-  "name": "mikser-whitebox-core",
-  "version": "7.5.5",
+  "name": "mikser-whitebox-sdk",
+  "version": "7.6.1",
   "description": "",
   "files": [
     "dist",
@@ -12,12 +12,12 @@
     "serve": "vite preview",
     "prepare": "npm run build"
   },
-  "main": "dist/vue-whitebox-core.umd.js",
-  "module": "dist/vue-whitebox-core.es.js",
+  "main": "dist/mikser-whitebox-sdk.umd.js",
+  "module": "dist/mikser-whitebox-sdk.es.js",
   "exports": {
     ".": {
-      "import": "./dist/vue-whitebox-core.es.js",
-      "require": "./dist/vue-whitebox-core.umd.js"
+      "import": "./dist/mikser-whitebox-sdk.es.js",
+      "require": "./dist/mikser-whitebox-sdk.umd.js"
     }
   },
   "types": "src/types/global.d.ts",

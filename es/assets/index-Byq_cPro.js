@@ -1545,7 +1545,6 @@ async function createMikser({ router, store, dataSource, options: options2 }) {
       tracking.options = options2;
       onDocumentChanged(() => {
         tracking.pageView();
-        tracking.session();
       });
     }
   };

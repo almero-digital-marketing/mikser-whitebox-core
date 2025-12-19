@@ -11,7 +11,7 @@ export default defineConfig((options) => {
     return {
         publicDir: 'out',
         define: options.mode == 'development' ? {
-            WHITEBOX_DOMAIN: JSON.stringify('gpoint.bg'),
+            WHITEBOX_DOMAIN: JSON.stringify('almero.bg'),
             WHITEBOX_CONTEXT: JSON.stringify(machineId),
         } : {
             WHITEBOX_DOMAIN: JSON.stringify('web'),
@@ -33,8 +33,8 @@ export default defineConfig((options) => {
         build: {
             lib: {
               entry: path.resolve(__dirname, '/src/index.js'),
-              name: 'VueWhiteboxCore',
-              fileName: (format) => `vue-whitebox-core.${format}.js`
+              name: 'MikserWhiteboxSdk',
+              fileName: (format) => `mikser-whitebox-sdk.${format}.js`
             },
             rollupOptions: {
               // make sure to externalize deps that shouldn't be bundled
