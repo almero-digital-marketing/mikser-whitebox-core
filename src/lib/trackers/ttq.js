@@ -166,7 +166,7 @@ async function trackSubscribe(eventId, { currency, value = 0 }, identities) {
 
 async function trackViewContent(eventId, { category, contentId }, identities) {
     const context = {
-        content_type: category,
+        content_type: 'product',
         content_id: contentId
     }
     console.log('Track ViewContent:', eventId, name, category, contentId)
