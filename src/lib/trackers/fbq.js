@@ -54,17 +54,19 @@ async function trackInit(eventId, identities, options) {
         console.log('Fbc:', name, fbp)
     }
 
-    const userId = identities.find(({ name }) => name == 'userId').value
-    if (Array.isArray(options.tracking.fbq)) {
-        for (let fbq of options.tracking.fbq) {
-            window.fbq('init', fbq, {
+    const userId = identities.find(({ name }) => name == 'userId')?.value
+    if (userId) {
+        if (Array.isArray(options.tracking.fbq)) {
+            for (let fbq of options.tracking.fbq) {
+                window.fbq('init', fbq, {
+                    external_id: userId
+                })
+            }
+        } else {
+            window.fbq('init', options.tracking.fbq, {
                 external_id: userId
-            })
+            }) 
         }
-    } else {
-        window.fbq('init', options.tracking.fbq, {
-            external_id: userId
-        }) 
     }
     trackNextPageView = true
     console.log('Track Init:', eventId, name, userId, options.tracking.fbq, identities)

@@ -35,36 +35,41 @@ function items2gtag(items) {
 }
 
 async function trackInit(eventId, identities, options) {
-    const userId = identities.find(({ name }) => name == 'userId').value
-    window.gtag('js', new Date())
-    if (Array.isArray(options.tracking.gtag)) {
-        for(let gtag of options.tracking.gtag) {
-            window.gtag('config', gtag, {
+    const userId = identities.find(({ name }) => name == 'userId')?.value
+    if (userId) {
+        window.gtag('js', new Date())
+        if (Array.isArray(options.tracking.gtag)) {
+            for(let gtag of options.tracking.gtag) {
+                window.gtag('config', gtag, {
+                    user_id: userId
+                })
+            }
+        } else {
+            window.gtag('config', options.tracking.gtag, {
                 user_id: userId
             })
         }
-    } else {
-        window.gtag('config', options.tracking.gtag, {
-            user_id: userId
-        })
+        console.log('Track Init:', eventId, name, userId, options.tracking.gtag)
     }
-    console.log('Track Init:', eventId, name, userId, options.tracking.gtag)
 }
 
 async function trackIdentity(eventId, identities, options) {
-    const userId = identities.find(({ name }) => name == 'userId').value
-    if (Array.isArray(options.tracking.gtag)) {
-        for(let tagId of options.tracking.gtag) {
-            window.gtag('config', tagId, {
+    const userId = identities.find(({ name }) => name == 'userId')?.value
+    if (userId) {
+        if (Array.isArray(options.tracking.gtag)) {
+            for(let tagId of options.tracking.gtag) {
+                window.gtag('config', tagId, {
+                    user_id: userId,
+                    send_page_view: false,
+                })
+            }
+        } else {
+            window.gtag('config', options.tracking.gtag, {
                 user_id: userId,
                 send_page_view: false,
             })
         }
-    } else {
-        window.gtag('config', options.tracking.gtag, {
-            user_id: userId,
-            send_page_view: false,
-        })
+        console.log('Track Identity:', eventId, name, userId)
     }
     window.gtag('set', 'user_data', removeUndefined({
         email: identities.find(({ name }) => name == 'email')?.value,
@@ -79,7 +84,6 @@ async function trackIdentity(eventId, identities, options) {
             postal_code: identities.find(({ name }) => name == 'postalcode')?.value,
         }
     }, false, 1))
-    console.log('Track Identity:', eventId, name, userId)
 }
 
 async function trackPageView(eventId) {

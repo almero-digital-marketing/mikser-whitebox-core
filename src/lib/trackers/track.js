@@ -11,15 +11,17 @@ export async function trackSst(name, eventId, eventName, context = {}, identitie
         timestamp: Date.now(),
         page: window.location.href
     }   
-    const userId = identities.find(identity => identity.name == 'userId').value
     data.identities = [ 
-        ...identities, 
-        { 
+        ...identities
+    ]
+    const userId = identities.find(identity => identity.name == 'userId')?.value
+    if (userId) {
+        data.identities.push({ 
             id: "fingerprint",
             name: "userId", 
             value: userId
-        }
-    ]
+        })
+    }
     if (connect.runtime.sst) {
         await axios.post(`${connect.runtime.url}/track`, data, {
             headers: {
