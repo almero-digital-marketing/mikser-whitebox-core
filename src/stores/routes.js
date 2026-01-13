@@ -77,8 +77,6 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 			const documents = await Core.dataSource.loadSitemap()
 			let routes = []
 			for (let document of documents) {
-				const routeDefinition = routeDefinitions[document.data.meta.component]
-				
 				this.reverseRoutes[document.data.meta.href] = this.reverseRoutes[document.data.meta.href] || []
 				this.reverseRoutes[document.data.meta.href].push({ 
 					refId: document.refId,
@@ -86,7 +84,9 @@ export const useWhiteboxRoutes = defineStore('whitebox-routes', {
 					endpoint: 'mikser'
 				})
 				let collections = {}
+				let routeDefinition
 				if (routeDefinition?.meta?.collections) {
+					routeDefinition = routeDefinitions[document.data.meta.component]
 					for(let collectionName in routeDefinition.meta.collections) {
 						collections[collectionName] = {
 							query: routeDefinition.meta.collections[collectionName]
