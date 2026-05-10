@@ -1,57 +1,57 @@
 {
-  "name": "mikser-whitebox-sdk",
-  "version": "7.6.8",
-  "description": "",
-  "files": [
-    "dist",
-    "src/types/global.d.ts"
-  ],
-  "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
-    "serve": "vite preview",
-    "prepare": "npm run build"
-  },
-  "main": "dist/mikser-whitebox-sdk.umd.js",
-  "module": "dist/mikser-whitebox-sdk.es.js",
-  "exports": {
-    ".": {
-      "import": "./dist/mikser-whitebox-sdk.es.js",
-      "require": "./dist/mikser-whitebox-sdk.umd.js"
-    }
-  },
-  "types": "src/types/global.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/almero-digital-marketing/mikser-whitebox-core.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/almero-digital-marketing/mikser-whitebox-core/issues"
-  },
-  "homepage": "https://github.com/almero-digital-marketing/mikser-whitebox-core#readme",
-  "dependencies": {
-    "node-machine-id": "^1.1.12",
-    "p-queue": "^9.0.1",
-    "rollup-plugin-visualizer": "^6.0.5",
-    "uuid": "^13.0.0",
-    "vite-plugin-html": "^3.2.2",
-    "vue": "3.x"
-  },
-  "peerDependencies": {
-    "axios": "1.x",
-    "pinia": "3.x",
-    "vue": "3.x",
-    "vue-router": "4.x"
-  },
-  "directories": {
-    "src": "src"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.2",
-    "@vue/compiler-sfc": "^3.5.25",
-    "pinia": "^3.0.4",
-    "vite": "^7.2.4"
-  }
+	"name": "mikser-whitebox-sdk",
+	"version": "7.7.0",
+	"description": "",
+	"files": [
+		"dist",
+		"src/types/global.d.ts"
+	],
+	"scripts": {
+		"dev": "vite --host",
+		"build": "vite build",
+		"serve": "vite preview",
+		"prepare": "npm run build"
+	},
+	"main": "dist/mikser-whitebox-sdk.umd.js",
+	"module": "dist/mikser-whitebox-sdk.es.js",
+	"exports": {
+		".": {
+			"import": "./dist/mikser-whitebox-sdk.es.js",
+			"require": "./dist/mikser-whitebox-sdk.umd.js"
+		}
+	},
+	"types": "src/types/global.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/almero-digital-marketing/mikser-whitebox-sdk.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/almero-digital-marketing/mikser-whitebox-sdk/issues"
+	},
+	"homepage": "https://github.com/almero-digital-marketing/mikser-whitebox-sdk#readme",
+	"dependencies": {
+		"node-machine-id": "^1.1.12",
+		"p-queue": "^9.0.1",
+		"rollup-plugin-visualizer": "^6.0.5",
+		"uuid": "^13.0.0",
+		"vite-plugin-html": "^3.2.2",
+		"vue": "3.x"
+	},
+	"peerDependencies": {
+		"axios": "1.x",
+		"pinia": "3.x",
+		"vue": "3.x",
+		"vue-router": "4.x"
+	},
+	"directories": {
+		"src": "src"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^6.0.2",
+		"@vue/compiler-sfc": "^3.5.25",
+		"pinia": "^3.0.4",
+		"vite": "^7.2.4"
+	}
 }

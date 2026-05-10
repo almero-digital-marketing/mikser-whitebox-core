@@ -16,7 +16,7 @@ function getFbc() {
         if(window.location.search.includes('fbclid=')) {
             const queryString = window.location.search
             const urlParams = new URLSearchParams(queryString)
-            fbc = 'fb.1.'+ (+new Date()) +'.'+ urlParams.get('fbclid')
+            const fbc = 'fb.1.'+ (+new Date()) +'.'+ urlParams.get('fbclid')
             return fbc
         } else {
             return null
