@@ -1,6 +1,6 @@
 {
 	"name": "mikser-whitebox-sdk",
-	"version": "7.7.1",
+	"version": "8.0.0",
 	"description": "",
 	"files": [
 		"dist",
