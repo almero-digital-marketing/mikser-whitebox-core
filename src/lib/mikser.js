@@ -11,10 +11,7 @@ import WhiteboxDataSource from '../core/whitebox'
 import navigation from './navigation'
 
 export async function createMikser({ router, store, dataSource, options }) {
-	Core.dataSource = dataSource || new WhiteboxDataSource({ 
-		context: options.context, 
-		shared: options.shared ? 'shared' : '', 
-	})
+	Core.dataSource = dataSource
 
 	const routesStore = useWhiteboxRoutes(store)
 	let routeDefinitions = {}

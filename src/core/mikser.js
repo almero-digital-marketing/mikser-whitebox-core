@@ -1,7 +1,7 @@
 export default class {
-    constructor({ baseUrl = '', catlogName = "mikser", entitiesName, documentName = 'document', contextName = 'context', lang } = {}) {
+    constructor({ baseUrl = '', catlogName = "mikser", entitiesName, documentsName = 'document', contextName = 'context', lang } = {}) {
         this.baseUrl = baseUrl
-        this.documentName = documentName
+        this.documentsName = documentsName
         this.contextName = contextName
         this.lang = lang
         this.catlogName = catlogName
@@ -28,7 +28,7 @@ export default class {
             let documentRoot = `${this.baseUrl}`
             if (this.lang) documentRoot += `/${this.lang}`
             if (this.entitiesName) documentRoot += `/${this.entitiesName}`
-            documentRoot += `/data/${refId}${this.documentName ? '.' + this.documentName : ''}.json`
+            documentRoot += `/data/${refId}${this.documentsName ? '.' + this.documentsName : ''}.json`
             
             return fetch(documentRoot)
             .then(responese => responese.json())
